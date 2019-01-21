@@ -1,0 +1,8 @@
+uuid:
+  creditStatus: 0 - 100 (SchufaSystem)
+  credits:
+    credit1:
+      used: true
+      sum: 10000
+      rest: 5126
+      daysLeft: 21

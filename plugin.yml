@@ -1,0 +1,11 @@
+name: BankCredit
+version: 0.5
+authors: [B1GSt4R]
+website: https://blockstone.de
+main: blockstone.B1GSt4R.BankCredit.Main.system
+softdepend: [Vault]
+commands:
+  Bank:
+    usage: </command>
+    description: test economy
+    aliases: [Kredit, Credit, kredit, credit, bank]
