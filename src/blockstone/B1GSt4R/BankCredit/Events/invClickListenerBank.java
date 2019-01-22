@@ -125,6 +125,16 @@ public class invClickListenerBank implements Listener {
 			}
 			
 			if(PlayerHasCredit) {
+				double creditValue = plugin.api.getCreditValue(credits.get(i));
+				double leaseTime = plugin.api.getCreditLeaseTime(credits.get(i));
+				double remaining = plugin.api.getRemainingCreditValue(plugin.api.builderPlayerUUID_CreditID(p, credits.get(i)));
+				double nominalzinssatz = plugin.api.getCreditPayTax(credits.get(i)) / 100;
+				
+				double tilgung = creditValue / leaseTime;
+				double zinsen = remaining / leaseTime * nominalzinssatz;
+				
+				double value = tilgung+zinsen;
+				
 				credit = new ItemStack(Material.WRITTEN_BOOK);
 				BookMeta creditMeta = (BookMeta) credit.getItemMeta();
 				creditMeta.setDisplayName("§aAlready in use");
@@ -141,6 +151,11 @@ public class invClickListenerBank implements Listener {
 				lore.add("§7§m-----<§6 Personal Informations §7§m>-----");
 				lore.add("§7Remaining Value: §6"+plugin.api.getRemainingCreditValue(PlayerUUID_CreditID)+"$");
 				lore.add("§7Remaining Days: §6"+plugin.api.getDaysLeft(PlayerUUID_CreditID)+" days");
+				if(plugin.eco.getBalance(p) >= value) {
+					lore.add("§7Next Pay Value: §a"+value+"$");
+				}else {
+					lore.add("§7Next Pay Value: §c"+value+"$");
+				}
 				lore.add("§7Deferrals: §6"+plugin.api.getDeferralCounter(PlayerUUID_CreditID)+"x");
 				lore.add("§7Not Payed Days: §6"+plugin.api.getNotPayedDays(PlayerUUID_CreditID)+" days");
 				lore.add("§7Extra Pays: §6"+plugin.api.getExtraPays(PlayerUUID_CreditID)+"$");

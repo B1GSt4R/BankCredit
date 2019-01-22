@@ -24,7 +24,7 @@ public class system extends JavaPlugin {
 	public static blockstone.B1GSt4R.BankCredit.Utils.API api;
 	public static blockstone.B1GSt4R.BankCredit.Utils.creditConfigSystem credit;
 	public static blockstone.B1GSt4R.BankCredit.Utils.schufaSystem schufa;
-	public static blockstone.B1GSt4R.timeRang.Main.system timeRankAPI;
+	public static blockstone.B1GSt4R.timeRank.Main.system timeRankAPI;
 	
 	public ConsoleCommandSender CONSOLE = this.getServer().getConsoleSender();
 	public PluginManager pm = this.getServer().getPluginManager();
@@ -114,6 +114,7 @@ public class system extends JavaPlugin {
 			
 			ArrayList<String> creditList = api.getAllCreditIds();
 			Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+				@SuppressWarnings("static-access")
 				@Override
 				public void run() {
 					for(Player all : Bukkit.getOnlinePlayers()) {
@@ -122,7 +123,16 @@ public class system extends JavaPlugin {
 								if(api.getDate().equals(api.getNextPayDate(api.builderPlayerUUID_CreditID(all, creditList.get(i))))) {
 									if(api.getTime().equals(api.getNextPayTime(api.builderPlayerUUID_CreditID(all, creditList.get(i))))) {
 										if(api.getDaysLeft(api.builderPlayerUUID_CreditID(all, creditList.get(i))) > 1) {
-											double value = api.getRemainingCreditValue(api.builderPlayerUUID_CreditID(all, creditList.get(i))) / api.getDaysLeft(api.builderPlayerUUID_CreditID(all, creditList.get(i)));
+											double creditValue = api.getCreditValue(creditList.get(i));
+											double leaseTime = api.getCreditLeaseTime(creditList.get(i));
+											double remaining = api.getRemainingCreditValue(api.builderPlayerUUID_CreditID(all, creditList.get(i)));
+											double nominalzinssatz = api.getCreditPayTax(creditList.get(i)) / 100;
+											
+											double tilgung = creditValue / leaseTime;
+											double zinsen = remaining / leaseTime * nominalzinssatz;
+											
+											double value = tilgung+zinsen;
+											CONSOLE.sendMessage("§d"+value+" = " + tilgung + " + " + zinsen);
 											payOffCredit(all, creditList.get(i), value, false);
 										}else {
 											double value = api.getRemainingCreditValue(api.builderPlayerUUID_CreditID(all, creditList.get(i)));

@@ -18,7 +18,7 @@ import blockstone.B1GSt4R.BankCredit.Main.system;
 
 public class bankCmd implements CommandExecutor {
 	
-	private blockstone.B1GSt4R.timeRang.Main.system TimeRank;
+	private blockstone.B1GSt4R.timeRank.Main.system TimeRank;
 	
 	private blockstone.B1GSt4R.BankCredit.Main.system plugin;
 	public bankCmd(system system) {
@@ -66,7 +66,7 @@ public class bankCmd implements CommandExecutor {
 		p.openInventory(inv);
 	}
 	
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({ "deprecation", "static-access" })
 	public void creditMenu(Player p, boolean exitMenu) {
 		
 		ItemStack exit = new ItemStack(Material.BARRIER);
@@ -134,6 +134,16 @@ public class bankCmd implements CommandExecutor {
 			}
 			
 			if(PlayerHasCredit) {
+				double creditValue = plugin.api.getCreditValue(credits.get(i));
+				double leaseTime = plugin.api.getCreditLeaseTime(credits.get(i));
+				double remaining = plugin.api.getRemainingCreditValue(plugin.api.builderPlayerUUID_CreditID(p, credits.get(i)));
+				double nominalzinssatz = plugin.api.getCreditPayTax(credits.get(i)) / 100;
+				
+				double tilgung = creditValue / leaseTime;
+				double zinsen = remaining / leaseTime * nominalzinssatz;
+				
+				double value = tilgung+zinsen;
+				
 				credit = new ItemStack(Material.WRITTEN_BOOK);
 				BookMeta creditMeta = (BookMeta) credit.getItemMeta();
 				creditMeta.setDisplayName("§aAlready in use");
@@ -150,6 +160,11 @@ public class bankCmd implements CommandExecutor {
 				lore.add("§7§m-----<§6 Personal Informations §7§m>-----");
 				lore.add("§7Remaining Value: §6"+plugin.api.getRemainingCreditValue(PlayerUUID_CreditID)+"$");
 				lore.add("§7Remaining Days: §6"+plugin.api.getDaysLeft(PlayerUUID_CreditID)+" days");
+				if(plugin.eco.getBalance(p) >= value) {
+					lore.add("§7Next Pay Value: §a"+value+"$");
+				}else {
+					lore.add("§7Next Pay Value: §c"+value+"$");
+				}
 				lore.add("§7Deferrals: §6"+plugin.api.getDeferralCounter(PlayerUUID_CreditID)+"x");
 				lore.add("§7Not Payed Days: §6"+plugin.api.getNotPayedDays(PlayerUUID_CreditID)+" days");
 				lore.add("§7Extra Pays: §6"+plugin.api.getExtraPays(PlayerUUID_CreditID)+"$");
