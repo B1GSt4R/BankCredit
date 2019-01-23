@@ -3,7 +3,7 @@ version: 0.7.1
 authors: [B1GSt4R]
 website: https://blockstone.de
 main: blockstone.B1GSt4R.BankCredit.Main.system
-softdepend: [Vault]
+softdepend: [Vault, TimeRank]
 commands:
   Bank:
     usage: </command>
