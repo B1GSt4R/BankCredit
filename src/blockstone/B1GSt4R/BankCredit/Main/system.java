@@ -1,13 +1,19 @@
 package blockstone.B1GSt4R.BankCredit.Main;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.Reader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.craftbukkit.libs.jline.internal.InputStreamReader;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -18,6 +24,7 @@ import blockstone.B1GSt4R.BankCredit.Utils.schufaSystem;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 
+@SuppressWarnings("static-access")
 public class system extends JavaPlugin {
 	
 	public static blockstone.B1GSt4R.BankCredit.Utils.JDBC sql;
@@ -36,6 +43,7 @@ public class system extends JavaPlugin {
 	public String prefix = "§6§lBank§eCredit §8>> §7";
 	public String menuPrefix = "§8Bank of §5BlockStone";
 	public String failed = prefix+"§c";
+	public String versionURL = "https://www.B1GSt4R.de/bukkit-plugins/BankCredit/version.rss";
 	
 	public boolean TimeRank = pm.getPlugin("TimeRank") != null;
 	public boolean Vault = pm.getPlugin("Vault") != null;
@@ -53,6 +61,30 @@ public class system extends JavaPlugin {
 	public static int Errorcode = 0;
 	boolean host, port, dbname, user, pw;
 	static boolean jdbcError = false;
+	
+	public String[] adminPerms = {
+			/*1.*/		"*", 
+			/*2.*/		"BankCredit.*", 
+			/*3.*/		"BankCredit.admin.*", 
+			/*4.*/		"BankCredit.admin.time.*",
+			/*5.*/		"BankCredit.admin.time.add",
+			/*6.*/		"BankCredit.admin.time.set",
+			/*7.*/		"BankCredit.admin.time.del",
+			/*8.*/		"BankCredit.admin.rank.*",
+			/*9.*/		"BankCredit.admin.rank.add",
+			/*10.*/		"BankCredit.admin.rank.set",
+			/*11.*/		"BankCredit.admin.rank.del",
+			/*12.*/		"BankCredit.admin.help.*",
+			/*13.*/		"BankCredit.admin.help.admin",
+			/*14.*/		"BankCredit.admin.version"
+					};
+			
+			public String[] userPerms = {
+			/*1.*/		"BankCredit.user.*", 
+			/*2.*/		"BankCredit.user.time",
+			/*3.*/		"BankCredit.user.rank",
+			/*4.*/		"BankCredit.user.help.user"
+					};
 	
 	@Override
 	public void onEnable() {
@@ -114,10 +146,9 @@ public class system extends JavaPlugin {
 			
 			ArrayList<String> creditList = api.getAllCreditIds();
 			Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-				@SuppressWarnings("static-access")
 				@Override
 				public void run() {
-					for(Player all : Bukkit.getOnlinePlayers()) {
+					for(OfflinePlayer all : Bukkit.getOfflinePlayers()) {
 						for(int i = 0; i<creditList.size(); i++) {
 							if(api.isExistsPlayerCredit(all, creditList.get(i))) {
 								if(api.getDate().equals(api.getNextPayDate(api.builderPlayerUUID_CreditID(all, creditList.get(i))))) {
@@ -131,8 +162,8 @@ public class system extends JavaPlugin {
 											double tilgung = creditValue / leaseTime;
 											double zinsen = remaining / leaseTime * nominalzinssatz;
 											
-											double value = tilgung+zinsen;
-											CONSOLE.sendMessage("§d"+value+" = " + tilgung + " + " + zinsen);
+											double value = Math.round(tilgung+zinsen);
+											value = Math.round(value*100)/100.0;
 											payOffCredit(all, creditList.get(i), value, false);
 										}else {
 											double value = api.getRemainingCreditValue(api.builderPlayerUUID_CreditID(all, creditList.get(i)));
@@ -159,12 +190,16 @@ public class system extends JavaPlugin {
 	}
 	
 	private void msgLoader(boolean statusLoaded) {
+		String newVersion = ReadURL(versionURL);
 		if(statusLoaded) {
 			CONSOLE.sendMessage(" ");
 			CONSOLE.sendMessage(strich);
 			CONSOLE.sendMessage(" ");
 			CONSOLE.sendMessage("§7Name: §6"+this.getDescription().getName());
 			CONSOLE.sendMessage("§7Version: §6"+this.getDescription().getVersion());
+			if(!newVersion.equals(this.getDescription().getVersion())) {
+				CONSOLE.sendMessage("§cNew Update Found!");
+			}
 			CONSOLE.sendMessage("§7Author: §6"+this.getDescription().getAuthors().get(0));
 			CONSOLE.sendMessage(" ");
 			
@@ -205,6 +240,9 @@ public class system extends JavaPlugin {
 			CONSOLE.sendMessage(" ");
 			CONSOLE.sendMessage("§7Name: §6"+this.getDescription().getName());
 			CONSOLE.sendMessage("§7Version: §6"+this.getDescription().getVersion());
+			if(!newVersion.equals(this.getDescription().getVersion())) {
+				CONSOLE.sendMessage("§cNew Update Found");
+			}
 			CONSOLE.sendMessage("§7Author: §6"+this.getDescription().getAuthors().get(0));
 			CONSOLE.sendMessage(" ");
 			CONSOLE.sendMessage("§7Status Plugin: §4OFFLINE");
@@ -252,6 +290,23 @@ public class system extends JavaPlugin {
 		CONSOLE.sendMessage(" ");
 	}
 	
+	public String ReadURL(String URL) {
+		String ver = "";
+		try {
+			URL url = new URL(URL);
+			Reader is = new InputStreamReader(url.openStream());
+			BufferedReader in = new BufferedReader(is);
+			for(String s; (s = in.readLine()) != null;)
+				ver += s;
+			in.close();
+		} catch (MalformedURLException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return ver;
+	}
+	
 	private boolean setupEconomy() {
 		RegisteredServiceProvider<Economy> ecoProvider = this.getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
 		if(ecoProvider != null) {
@@ -291,31 +346,41 @@ public class system extends JavaPlugin {
 		}
 	}
 	
-	public void payOffCredit(Player p, String CreditID, double value, boolean self) {
+	public void payOffCredit(OfflinePlayer player, String CreditID, double value, boolean self) {
 		if(self) {
 			//p.closeInventory();
 		}
-		String PlayerUUID_CreditID = api.builderPlayerUUID_CreditID(p, CreditID);
-		EconomyResponse r = system.eco.withdrawPlayer(p, value);
+		String PlayerUUID_CreditID = api.builderPlayerUUID_CreditID(player, CreditID);
+		EconomyResponse r = system.eco.withdrawPlayer(player, value);
+		Player p = null;
+		if(Bukkit.getPlayer(player.getUniqueId()) != null) {
+			p = Bukkit.getPlayer(player.getUniqueId());
+		}
 		if(r.transactionSuccess()) {
 			if(api.getRemainingCreditValue(PlayerUUID_CreditID) == value) {
-				p.sendMessage(prefix+"Du hast die restlichen §e"+value+ "$ §7zurück gezahlt.");
-				api.removePlayerCredit(p, CreditID);
+				if(p != null) {
+					p.sendMessage(prefix+"Du hast die restlichen §e"+value+ "$ §7zurück gezahlt.");
+				}
+				api.removePlayerCredit(player, CreditID);
 			}else {
 				api.subtractDaysLeft(PlayerUUID_CreditID, 1);
 				api.subtractRemainingCreditValue(PlayerUUID_CreditID, value);
 				api.addNextPayDate(PlayerUUID_CreditID, 0, 0, 1);
-				p.sendMessage(prefix+"Du hast §e"+value+"$ §7für deinen Kredit zurück gezahlt.");
+				if(p != null) {
+					p.sendMessage(prefix+"Du hast §e"+value+"$ §7für deinen Kredit zurück gezahlt.");
+				}
 			}
 			
 		}else {
 			//p.sendMessage(plugin.failed+r.errorMessage);
-			p.sendMessage(strich);
-			p.sendMessage(prefix+"§cDu hast nicht genug Geld auf deinem Konto!");
-			p.sendMessage("§7 ");
-			p.sendMessage(prefix+"Betrag: §e"+api.getRemainingCreditValue(PlayerUUID_CreditID)+"$");
-			p.sendMessage(prefix+"Fehlender Betrag: §e"+(api.getRemainingCreditValue(PlayerUUID_CreditID)-eco.getBalance(p))+"$");
-			p.sendMessage(strich);
+			if(p != null) {
+				p.sendMessage(strich);
+				p.sendMessage(prefix+"§cDu hast nicht genug Geld auf deinem Konto!");
+				p.sendMessage("§7 ");
+				p.sendMessage(prefix+"Betrag: §e"+api.getRemainingCreditValue(PlayerUUID_CreditID)+"$");
+				p.sendMessage(prefix+"Fehlender Betrag: §e"+(api.getRemainingCreditValue(PlayerUUID_CreditID)-eco.getBalance(p))+"$");
+				p.sendMessage(strich);
+			}
 			if(!self) {
 				api.addNextPayDate(PlayerUUID_CreditID, 0, 0, 1);
 				api.addNotPayedDays(PlayerUUID_CreditID, 1);

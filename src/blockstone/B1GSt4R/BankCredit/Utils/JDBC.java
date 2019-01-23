@@ -9,8 +9,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
 
+@SuppressWarnings("static-access")
 public class JDBC {
 	
 	public static blockstone.B1GSt4R.BankCredit.Main.system plugin;
@@ -251,7 +252,7 @@ public class JDBC {
 	
 	/*PlayerCredit Table Stuff*/
 	
-	public static boolean isExistsPlayerCredit(Player p, String creditID) {
+	public static boolean isExistsPlayerCredit(OfflinePlayer p, String creditID) {
 		try {
 			PreparedStatement ps = getConnection().prepareStatement("SELECT * FROM BankCredit_PlayerCredits WHERE PlayerUUID_CreditID = ?");
 			ps.setString(1, p.getUniqueId().toString()+"_"+creditID);
@@ -263,7 +264,7 @@ public class JDBC {
 		return false;
 	}
 	
-	public static ArrayList<String> getPlayerUUID_CreditID_List(Player p) {
+	public static ArrayList<String> getPlayerUUID_CreditID_List(OfflinePlayer p) {
 		ArrayList<String> list = new ArrayList<>();
 		try {
 			PreparedStatement ps = getConnection().prepareStatement("SELECT PlayerUUID_CreditID FROM BankCredit_PlayerCredits WHERE PlayerUUID = ?");
@@ -492,7 +493,7 @@ public class JDBC {
 		}
 	}
 	
-	public static void createPlayerCredit(Player p, String CreditID, String NextPayDate, String NextPayTime, int DaysLeft, double RemainingCreditValue, int DeferralCounter, int NotPayedDays, double ExtraPays, double PunishPay) {
+	public static void createPlayerCredit(OfflinePlayer p, String CreditID, String NextPayDate, String NextPayTime, int DaysLeft, double RemainingCreditValue, int DeferralCounter, int NotPayedDays, double ExtraPays, double PunishPay) {
 		String PlayerUUID = p.getUniqueId().toString();
 		String PlayerUUID_CreditID = PlayerUUID+"_"+CreditID;
 		
@@ -514,7 +515,7 @@ public class JDBC {
 		}
 	}
 	
-	public static void createPlayerCredit(Player p, String CreditID) {
+	public static void createPlayerCredit(OfflinePlayer p, String CreditID) {
 		Date date = new Date();
 		SimpleDateFormat sd = new SimpleDateFormat("dd.MM.yyyy");
 		SimpleDateFormat st = new SimpleDateFormat("HH:mm");

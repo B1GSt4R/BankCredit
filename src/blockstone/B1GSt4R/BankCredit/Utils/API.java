@@ -5,11 +5,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
 
-import blockstone.B1GSt4R.BankCredit.Main.system;
-import net.milkbowl.vault.economy.EconomyResponse;
-
+@SuppressWarnings("static-access")
 public class API {
 	
 	public static blockstone.B1GSt4R.BankCredit.Main.system plugin;
@@ -137,7 +135,7 @@ public class API {
 	
 	/*Player Credit*/
 	
-	public static boolean isExistsPlayerCredit(Player p, String creditID) {
+	public static boolean isExistsPlayerCredit(OfflinePlayer p, String creditID) {
 		if(plugin.sql.isConnected()) {
 			return plugin.sql.isExistsPlayerCredit(p, creditID);
 		}else {
@@ -146,7 +144,7 @@ public class API {
 		return false;
 	}
 	
-	public static ArrayList<String> getPlayerUUID_CreditID_List(Player p) {
+	public static ArrayList<String> getPlayerUUID_CreditID_List(OfflinePlayer p) {
 		if(plugin.sql.isConnected()) {
 			return plugin.sql.getPlayerUUID_CreditID_List(p);
 		}else {
@@ -454,7 +452,7 @@ public class API {
 		}
 	}
 	
-	public static void createPlayerCredit(Player p, String CreditID, String NextPayDate, String NextPayTime, int DaysLeft, double RemainingCreditValue, int DeferralCounter, int NotPayedDays, double ExtraPays, double PunishPay) {
+	public static void createPlayerCredit(OfflinePlayer p, String CreditID, String NextPayDate, String NextPayTime, int DaysLeft, double RemainingCreditValue, int DeferralCounter, int NotPayedDays, double ExtraPays, double PunishPay) {
 		if(plugin.sql.isConnected()) {
 			plugin.sql.createPlayerCredit(p, CreditID, NextPayDate, NextPayTime, DaysLeft, RemainingCreditValue, DeferralCounter, NotPayedDays, ExtraPays, PunishPay);
 		}else {
@@ -462,7 +460,7 @@ public class API {
 		}
 	}
 	
-	public static void createPlayerCredit(Player p, String CreditID) {
+	public static void createPlayerCredit(OfflinePlayer p, String CreditID) {
 		if(plugin.sql.isConnected()) {
 			plugin.sql.createPlayerCredit(p, CreditID);
 		}else {
@@ -470,7 +468,7 @@ public class API {
 		}
 	}
 	
-	public static void removePlayerCredit(Player p, String CreditID) {
+	public static void removePlayerCredit(OfflinePlayer p, String CreditID) {
 		if(plugin.sql.isConnected()){
 			plugin.sql.removePlayerCredit(builderPlayerUUID_CreditID(p, CreditID));
 		}else {
@@ -682,15 +680,32 @@ public class API {
 		return CreditID;
 	}
 	
-	public static String builderPlayerUUID_CreditID(Player p, String CreditID) {
+	public static String builderPlayerUUID_CreditID(OfflinePlayer p, String CreditID) {
 		return p.getUniqueId().toString()+"_"+CreditID.toString();
 	}
 	
-	public static double getPayOffTaxValue(Player p, String CreditID) {
+	public static double getPayOffTaxValue(OfflinePlayer p, String CreditID) {
 		return 0.00;
 	}
 	
-	public static double generatePunishPay(Player p, String CreditID) {
+	public static double generatePunishPay(OfflinePlayer p, String CreditID) {
 		return 0.00;
+	}
+	
+	public static String addZerosToDouble(double value) {
+		String valueZero = String.valueOf(value);
+		valueZero += "00";
+		for(int x = 0; x<valueZero.length(); x++) {
+			if(valueZero.charAt(x) == '.') {
+				String tmp = valueZero.substring(x+1);
+				if(tmp.length() > 2) {
+					tmp = tmp.substring(0, 2);
+				}
+				valueZero = valueZero.substring(0, x+1);
+				valueZero += tmp;
+				return valueZero;
+			}
+		}
+		return null;
 	}
 }

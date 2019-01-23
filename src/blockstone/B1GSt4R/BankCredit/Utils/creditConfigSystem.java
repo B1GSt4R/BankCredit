@@ -3,12 +3,11 @@ package blockstone.B1GSt4R.BankCredit.Utils;
 import org.bukkit.entity.Player;
 
 import blockstone.B1GSt4R.BankCredit.Main.system;
-
+@SuppressWarnings("static-access")
 public class creditConfigSystem {
 	
 	private static blockstone.B1GSt4R.BankCredit.Main.system plugin;
 	
-	@SuppressWarnings("static-access")
 	public creditConfigSystem(system system) {
 		this.plugin = system;
 	}
