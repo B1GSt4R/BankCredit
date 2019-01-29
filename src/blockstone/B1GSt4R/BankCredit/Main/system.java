@@ -3,13 +3,22 @@ package blockstone.B1GSt4R.BankCredit.Main;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
+import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
+
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -18,6 +27,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import blockstone.B1GSt4R.BankCredit.Utils.creditConfigSystem;
 import blockstone.B1GSt4R.BankCredit.Utils.schufaSystem;
@@ -44,6 +56,7 @@ public class system extends JavaPlugin {
 	public String menuPrefix = "§8Bank of §5BlockStone";
 	public String failed = prefix+"§c";
 	public String versionURL = "https://www.B1GSt4R.de/bukkit-plugins/BankCredit/version.rss";
+	public String license;
 	
 	public boolean TimeRank = pm.getPlugin("TimeRank") != null;
 	public boolean Vault = pm.getPlugin("Vault") != null;
@@ -61,6 +74,8 @@ public class system extends JavaPlugin {
 	public static int Errorcode = 0;
 	boolean host, port, dbname, user, pw;
 	static boolean jdbcError = false;
+	public boolean useSQL = false;
+	public boolean validLicense = false;
 	
 	public String[] adminPerms = {
 			/*1.*/		"*", 
@@ -111,71 +126,87 @@ public class system extends JavaPlugin {
 				saveCfg();
 			}
 			
+			if(cfg.get("License") == null) {
+				cfg.set("License", "ABCDE-12345-FGH67-890IJ-KLMNOPQRST");
+				saveCfg();
+			}
+			
 			hosts = sqlCfg.getString("Host");
 			ports = sqlCfg.getString("Port");
 			dbnames = sqlCfg.getString("DBname");
 			users = sqlCfg.getString("Username");
 			pws = sqlCfg.getString("Password");
+			license = cfg.getString("License");
 			
 			host = sqlCfg.get("Host") != null;
 			port = sqlCfg.get("Port") != null;
 			dbname = sqlCfg.get("DBname") != null && !sqlCfg.get("DBname").equals("YourDataBase");
 			user = sqlCfg.get("Username") != null && !sqlCfg.get("Username").equals("YourUsername");
 			
-			if(host && port && dbname && user) {
-				sql.connect();
-			}
-			
 			msgLoader(true);
-			setupEconomy();
 			
-			new blockstone.B1GSt4R.BankCredit.Events.invClickListenerBank(this);
-			new blockstone.B1GSt4R.BankCredit.Events.joinListener(this);
+			getCommand(this.getDescription().getName()).setExecutor(new blockstone.B1GSt4R.BankCredit.Commands.bankCreditCMD(this));
 			
-			new schufaSystem(this);
-			new creditConfigSystem(this);
-			
-			getCommand("Bank").setExecutor(new blockstone.B1GSt4R.BankCredit.Commands.bankCmd(this));
-			
-			
-			if(!fileCfg.exists() && !filePlayerCreditCfg.exists()) {
-				saveCfg();
-			}else {
-				loadCfg();
-			}
-			
-			ArrayList<String> creditList = api.getAllCreditIds();
-			Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-				@Override
-				public void run() {
-					for(OfflinePlayer all : Bukkit.getOfflinePlayers()) {
-						for(int i = 0; i<creditList.size(); i++) {
-							if(api.isExistsPlayerCredit(all, creditList.get(i))) {
-								if(api.getDate().equals(api.getNextPayDate(api.builderPlayerUUID_CreditID(all, creditList.get(i))))) {
-									if(api.getTime().equals(api.getNextPayTime(api.builderPlayerUUID_CreditID(all, creditList.get(i))))) {
-										if(api.getDaysLeft(api.builderPlayerUUID_CreditID(all, creditList.get(i))) > 1) {
-											double creditValue = api.getCreditValue(creditList.get(i));
-											double leaseTime = api.getCreditLeaseTime(creditList.get(i));
-											double remaining = api.getRemainingCreditValue(api.builderPlayerUUID_CreditID(all, creditList.get(i)));
-											double nominalzinssatz = api.getCreditPayTax(creditList.get(i)) / 100;
-											
-											double tilgung = creditValue / leaseTime;
-											double zinsen = remaining / leaseTime * nominalzinssatz;
-											
-											double value = Math.round(tilgung+zinsen);
-											value = Math.round(value*100)/100.0;
-											payOffCredit(all, creditList.get(i), value, false);
-										}else {
-											double value = api.getRemainingCreditValue(api.builderPlayerUUID_CreditID(all, creditList.get(i)));
-											payOffCredit(all, creditList.get(i), value, false);
+			if(checkLicense(license)) {
+				if(host && port && dbname && user) {
+					sql.connect();
+					useSQL = true;
+				}
+				
+				setupEconomy();
+				
+				new blockstone.B1GSt4R.BankCredit.Events.invClickListenerBank(this);
+				new blockstone.B1GSt4R.BankCredit.Events.joinListener(this);
+				
+				new schufaSystem(this);
+				new creditConfigSystem(this);
+				
+				getCommand("Bank").setExecutor(new blockstone.B1GSt4R.BankCredit.Commands.bankCmd(this));
+				
+				
+				if(!fileCfg.exists() && !filePlayerCreditCfg.exists()) {
+					saveCfg();
+				}else {
+					loadCfg();
+				}
+				
+				ArrayList<String> creditList = api.getAllCreditIds();
+				Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+					@Override
+					public void run() {
+						if(useSQL && sql.isConnected()) {
+							sql.disconnect();
+							sql.connect();
+						}
+						for(OfflinePlayer all : Bukkit.getOfflinePlayers()) {
+							for(int i = 0; i<creditList.size(); i++) {
+								if(api.isExistsPlayerCredit(all, creditList.get(i))) {
+									if(api.getDate().equals(api.getNextPayDate(api.builderPlayerUUID_CreditID(all, creditList.get(i))))) {
+										if(api.getTime().equals(api.getNextPayTime(api.builderPlayerUUID_CreditID(all, creditList.get(i))))) {
+											if(api.getDaysLeft(api.builderPlayerUUID_CreditID(all, creditList.get(i))) > 1) {
+												double creditValue = api.getCreditValue(creditList.get(i));
+												double leaseTime = api.getCreditLeaseTime(creditList.get(i));
+												double remaining = api.getRemainingCreditValue(api.builderPlayerUUID_CreditID(all, creditList.get(i)));
+												double nominalzinssatz = api.getCreditPayTax(creditList.get(i)) / 100;
+												
+												double tilgung = creditValue / leaseTime;
+												double zinsen = remaining / leaseTime * nominalzinssatz;
+												
+												double value = Math.round(tilgung+zinsen);
+												value = Math.round(value*100)/100.0;
+												payOffCredit(all, creditList.get(i), value, false);
+											}else {
+												double value = api.getRemainingCreditValue(api.builderPlayerUUID_CreditID(all, creditList.get(i)));
+												payOffCredit(all, creditList.get(i), value, false);
+											}
 										}
 									}
 								}
 							}
 						}
 					}
-				}
-			}, 0, 60*20);
+				}, 0, 60*20);
+			}
 		}else {
 			stoppOfVault();
 		}
@@ -183,10 +214,14 @@ public class system extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
-		loadCfg();
-		saveCfg();
-		sql.disconnect();
 		msgLoader(false);
+		if(validLicense) {
+			loadCfg();
+			saveCfg();
+			if(useSQL && sql.isConnected()) {
+				sql.disconnect();
+			}
+		}
 	}
 	
 	private void msgLoader(boolean statusLoaded) {
@@ -203,7 +238,11 @@ public class system extends JavaPlugin {
 			CONSOLE.sendMessage("§7Author: §6"+this.getDescription().getAuthors().get(0));
 			CONSOLE.sendMessage(" ");
 			
-			CONSOLE.sendMessage("§7Status Plugin: §2ONLINE");
+			if(!license.equals("ABCDE-12345-FGH67-890IJ-KLMNOPQRST") && checkLicense(license)) {
+				CONSOLE.sendMessage("§7Status Plugin: §2ONLINE");
+			}else {
+				CONSOLE.sendMessage("§7Status Plugin: §eNOT AUTHORISED");
+			}
 			if(Vault) {
 				CONSOLE.sendMessage("§7Status Vault: §2FOUND");
 			}else if(!Vault){
@@ -228,6 +267,8 @@ public class system extends JavaPlugin {
 					CONSOLE.sendMessage(strichWarning);
 				}else if(!host || !port || !dbname || !user){
 					CONSOLE.sendMessage("§7Status MySQL: §4NOT FOUND");
+				}else if(!validLicense) {
+					CONSOLE.sendMessage("§7Status MySQL: §4DISABLED");
 				}
 			}
 			
@@ -245,7 +286,11 @@ public class system extends JavaPlugin {
 			}
 			CONSOLE.sendMessage("§7Author: §6"+this.getDescription().getAuthors().get(0));
 			CONSOLE.sendMessage(" ");
-			CONSOLE.sendMessage("§7Status Plugin: §4OFFLINE");
+			if(!license.equals("ABCDE-12345-FGH67-890IJ-KLMNOPQRST") && checkLicense(license)) {
+				CONSOLE.sendMessage("§7Status Plugin: §4OFFLINE");
+			}else {
+				CONSOLE.sendMessage("§7Status Plugin: §eNOT AUTHORISED");
+			}
 			if(Vault) {
 				CONSOLE.sendMessage("§7Status Vault: §2FOUND");
 			}else if(!Vault){
@@ -269,6 +314,8 @@ public class system extends JavaPlugin {
 					CONSOLE.sendMessage(strichWarning);
 				}else if(!host || !port || !dbname || !user){
 					CONSOLE.sendMessage("§7Status MySQL: §4NOT FOUND");
+				}else if(!validLicense) {
+					CONSOLE.sendMessage("§7Status MySQL: §4DISABLED");
 				}
 			}
 			
@@ -290,6 +337,70 @@ public class system extends JavaPlugin {
 		CONSOLE.sendMessage(" ");
 	}
 	
+	public boolean checkLicense(String license) {
+//		String url = "ftp://76ymNJQkrp35UDMsVNVK8RsZQS65KjELN2MxabtMN4upQEQuyr:eJVxvy5yqGhrjjRSGxKuUW34VxUXMen62zknKmaxXyUDSU2Rgz@GnnSDDRT24dt8j4mZ2yCUEfkXTRDsT6A.B1GSt4R.de/bukkit-plugins/TimeRank/U9qSGkE6VY4F3zKZcaZVujBkqUuwcWXBvMS7JdGAJuFgu2ajvk7neegj62L3Xt6GLfYE9msPGDYMUGC4MBxEmwwXZUSj4D2PQxuyHU4wjvh49FthJ8FRQANKCgtzjncN.rss";
+		String url = "ftp://web-3:xZVjTgyS7uDNPEhdx3BhyqCBT@wQFDLz9WtqwskSqxECg7JwxyQ.user.server.blockstone.de/htdocs/bukkit-plugins/BankCredit/5AU4WK6KVVUE2M8hbduf7BZC6SqUQpXedUseCeDRepK2CWD8fsrAsQurbRujEAGYb3wkhrxxevmC7yxuxe4e68GRrMrNFUW5TkvMTxSKeWw7LGpqEctun9bCq4TKYYuE.rss";
+		HashMap<String, Boolean> LizenzList = ReadLicenseList(url);
+		boolean valid = false;
+		String hashText = "";
+//		for(String license : LizenzList.keySet()) {
+			try {
+				//Lizenz to MD5
+				MessageDigest md = MessageDigest.getInstance("MD5");
+				md.reset();
+				md.update(license.getBytes());
+				byte[] digest = md.digest();
+				BigInteger bigInt = new BigInteger(1,digest);
+				String MD5 = bigInt.toString(16);
+				
+				//Lizenz to SHA-256
+				md = MessageDigest.getInstance("SHA-256");
+				md.reset();
+				md.update(license.getBytes());
+				digest = md.digest();
+				bigInt = new BigInteger(1,digest);
+				String SHA256 = bigInt.toString(16);
+				
+				//MD5 to SHA-1
+				md = MessageDigest.getInstance("SHA-1");
+				md.reset();
+				md.update(MD5.getBytes());
+				digest = md.digest();
+				bigInt = new BigInteger(1,digest);
+				String SHA1 = bigInt.toString(16);
+				
+				String tmp = SHA256+SHA1;
+				
+				//SHA-256+SHA-1 to SHA-512
+				md = MessageDigest.getInstance("SHA-512");
+				md.reset();
+				md.update(tmp.getBytes());
+				digest = md.digest();
+				bigInt = new BigInteger(1,digest);
+				hashText = bigInt.toString(16);
+//				CONSOLE.sendMessage("§c"+license+" §8- §a"+hashText);
+			} catch (NoSuchAlgorithmException e) {
+				e.printStackTrace();
+			}
+//		}
+//		for(String key : LizenzList.keySet()) {
+//			CONSOLE.sendMessage("§b"+key+"§7 / §c"+LizenzList.get(key));
+//			CONSOLE.sendMessage("§e"+hashText+"§7 / §d"+license);
+//		}
+		
+		if(!LizenzList.containsKey(hashText) || !LizenzList.get(hashText)) {
+//			CONSOLE.sendMessage("§cINVALID LICENSE");
+//			this.license = null;
+			valid = false;
+		}else {
+//			CONSOLE.sendMessage("§aVALID LICENSE");
+			valid = true;
+			validLicense = true;
+		}
+		LizenzList = null;
+		return valid;
+	}
+	
 	public String ReadURL(String URL) {
 		String ver = "";
 		try {
@@ -298,13 +409,29 @@ public class system extends JavaPlugin {
 			BufferedReader in = new BufferedReader(is);
 			for(String s; (s = in.readLine()) != null;)
 				ver += s;
-			in.close();
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return ver;
+	}
+	
+	public HashMap<String, Boolean> ReadLicenseList(String URL){
+		HashMap<String, Boolean> licenseList = new HashMap<>();
+		try {
+			InputStream is = new URL(URL).openConnection().getInputStream();
+			Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(is);
+			int list = doc.getElementsByTagName("license").getLength();
+			for(int i = 0; i < list; i++) {
+				Node keys = doc.getElementsByTagName("license").item(i);
+				NodeList child = keys.getChildNodes();
+				licenseList.put(child.item(1).getTextContent().toString(), Boolean.parseBoolean(child.item(3).getTextContent().toString()));
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		return licenseList;
 	}
 	
 	private boolean setupEconomy() {
@@ -386,5 +513,50 @@ public class system extends JavaPlugin {
 				api.addNotPayedDays(PlayerUUID_CreditID, 1);
 			}
 		}
+	}
+	
+	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+		if(cmd.getName().equalsIgnoreCase(this.getDescription().getName())) {
+			String newVersion = ReadURL(versionURL);
+			if(sender instanceof Player) {
+				Player p = (Player)sender;
+				boolean perm = p.isOp() ||
+						p.hasPermission(adminPerms[0]) ||
+						p.hasPermission(adminPerms[1]) ||
+						p.hasPermission(adminPerms[2]) ||
+						p.hasPermission(adminPerms[13]);
+				if(perm && !newVersion.equals(getDescription().getVersion())) {
+					p.sendMessage(strichWarning);
+					p.sendMessage(prefix+"There is a new Version!");
+					p.sendMessage(prefix+"Current Version: §6"+getDescription().getVersion());
+					p.sendMessage(prefix+"New Version: §6"+newVersion);
+					p.sendMessage(" ");
+					p.sendMessage(prefix+"Download Link below:");
+					p.sendMessage(prefix+"https://www.B1GSt4R.de/my-account/downloads/");
+					p.sendMessage(strichWarning);
+					
+					CONSOLE.sendMessage(strichWarning);
+					CONSOLE.sendMessage(prefix+"There is a new Version!");
+					CONSOLE.sendMessage(prefix+"Current Version: §6"+getDescription().getVersion());
+					CONSOLE.sendMessage(prefix+"New Version: §6"+newVersion);
+					CONSOLE.sendMessage(" ");
+					CONSOLE.sendMessage(prefix+"Download Link below:");
+					CONSOLE.sendMessage(prefix+"https://www.B1GSt4R.de/my-account/downloads/");
+					CONSOLE.sendMessage(strichWarning);
+				}
+			}else {
+				if(!newVersion.equals(getDescription().getVersion())) {
+					CONSOLE.sendMessage(strichWarning);
+					CONSOLE.sendMessage(prefix+"There is a new Version!");
+					CONSOLE.sendMessage(prefix+"Current Version: §6"+getDescription().getVersion());
+					CONSOLE.sendMessage(prefix+"New Version: §6"+newVersion);
+					CONSOLE.sendMessage(" ");
+					CONSOLE.sendMessage(prefix+"Download Link below:");
+					CONSOLE.sendMessage(prefix+"https://www.B1GSt4R.de/my-account/downloads/");
+					CONSOLE.sendMessage(strichWarning);
+				}
+			}
+		}
+		return true;
 	}
 }

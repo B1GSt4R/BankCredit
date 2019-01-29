@@ -32,6 +32,7 @@ public class JDBC {
 		if(isConnected()) {
 			try {
 				con.close();
+				con = null;
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}

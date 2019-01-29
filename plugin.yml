@@ -1,5 +1,5 @@
 name: BankCredit
-version: 0.7.1
+version: 0.7.3
 authors: [B1GSt4R]
 website: https://blockstone.de
 main: blockstone.B1GSt4R.BankCredit.Main.system
@@ -9,3 +9,6 @@ commands:
     usage: </command>
     description: test economy
     aliases: [Kredit, Credit, kredit, credit, bank]
+  BankCredit:
+    usage: </command>
+    description: check for Update
