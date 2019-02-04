@@ -46,7 +46,8 @@ public class invClickListenerBank implements Listener {
 					}else if(e.getCurrentItem().getItemMeta().getDisplayName().equals("§aAlready in use")) {
 						String CreditID = e.getCurrentItem().getItemMeta().getLore().get(2).substring(14);
 						double getRemainingValue = plugin.api.getRemainingCreditValue(plugin.api.builderPlayerUUID_CreditID(p, CreditID));
-						plugin.payOffCredit(p, CreditID, getRemainingValue, true);
+						double getRemaingPunishPay = plugin.api.getPunishPays(plugin.api.builderPlayerUUID_CreditID(p, CreditID));
+						plugin.payOffCredit(p, CreditID, getRemainingValue, getRemaingPunishPay, true);
 						i = credits.size();
 						refreshCreditMenu(p, true);
 					}else if(e.getCurrentItem().getItemMeta().getDisplayName().equals("§cExit")) {
@@ -145,22 +146,22 @@ public class invClickListenerBank implements Listener {
 				lore.add("§7 ");
 				lore.add("§7§m-----<§6 Credit Informations §7§m>-----");
 				lore.add("§7CreditID: §6"+credits.get(i));
-				lore.add("§7Value: §6"+plugin.api.addZerosToDouble(plugin.api.getCreditValue(credits.get(i)))+"$");
+				lore.add("§7Value: §6"+plugin.api.addZerosToDouble(plugin.api.getCreditValue(credits.get(i)))+" Münzen");
 				lore.add("§7Tax: §6"+plugin.api.getCreditPayTax(credits.get(i))+"%");
 				lore.add("§7LeaseTime: §6"+plugin.api.getCreditLeaseTime(credits.get(i))+" days");
 				lore.add("§7 ");
 				lore.add("§7§m-----<§6 Personal Informations §7§m>-----");
-				lore.add("§7Remaining Value: §6"+plugin.api.addZerosToDouble(plugin.api.getRemainingCreditValue(PlayerUUID_CreditID))+"$");
+				lore.add("§7Remaining Value: §6"+plugin.api.addZerosToDouble(plugin.api.getRemainingCreditValue(PlayerUUID_CreditID))+" Münzen");
 				lore.add("§7Remaining Days: §6"+plugin.api.getDaysLeft(PlayerUUID_CreditID)+" days");
 				if(plugin.eco.getBalance(p) >= value) {
-					lore.add("§7Next Pay Value: §a"+plugin.api.addZerosToDouble(value)+"$");
+					lore.add("§7Next Pay Value: §a"+plugin.api.addZerosToDouble(value)+" Münzen");
 				}else {
-					lore.add("§7Next Pay Value: §c"+plugin.api.addZerosToDouble(value)+"$");
+					lore.add("§7Next Pay Value: §c"+plugin.api.addZerosToDouble(value)+" Münzen");
 				}
 				lore.add("§7Deferrals: §6"+plugin.api.getDeferralCounter(PlayerUUID_CreditID)+"x");
 				lore.add("§7Not Payed Days: §6"+plugin.api.getNotPayedDays(PlayerUUID_CreditID)+" days");
-				lore.add("§7Extra Pays: §6"+plugin.api.addZerosToDouble(plugin.api.getExtraPays(PlayerUUID_CreditID))+"$");
-				lore.add("§7Punish Pay: §6"+plugin.api.addZerosToDouble(plugin.api.getPunishPays(PlayerUUID_CreditID))+"$");
+				lore.add("§7Extra Pays: §6"+plugin.api.addZerosToDouble(plugin.api.getExtraPays(PlayerUUID_CreditID))+" Münzen");
+				lore.add("§7Punish Pay: §6"+plugin.api.addZerosToDouble(plugin.api.getPunishPays(PlayerUUID_CreditID))+" Münzen");
 				creditMeta.setLore(lore);
 				credit.setItemMeta(creditMeta);
 			}else {
@@ -175,7 +176,7 @@ public class invClickListenerBank implements Listener {
 				ArrayList<String> lore = new ArrayList<>();
 				lore.add("§7 ");
 				lore.add("§7CreditID: §6"+credits.get(i));
-				lore.add("§7Value: §6"+plugin.api.addZerosToDouble(plugin.api.getCreditValue(credits.get(i)))+"$");
+				lore.add("§7Value: §6"+plugin.api.addZerosToDouble(plugin.api.getCreditValue(credits.get(i)))+" Münzen");
 				lore.add("§7Tax: §6"+plugin.api.getCreditPayTax(credits.get(i))+"%");
 				lore.add("§7LeaseTime: §6"+plugin.api.getCreditLeaseTime(credits.get(i))+" days");
 				creditMeta.setLore(lore);

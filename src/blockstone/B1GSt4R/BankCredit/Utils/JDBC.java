@@ -23,7 +23,9 @@ public class JDBC {
 			try {
 				con = DriverManager.getConnection("jdbc:mysql://"+plugin.hosts+":"+plugin.ports+"/"+plugin.dbnames, plugin.users, plugin.pws);
 			} catch (SQLException e) {
-				e.printStackTrace();
+				plugin.jdbcError = true;
+				plugin.Errorcode = e.getErrorCode();
+				plugin.Errormsg = e.getMessage();
 			}
 		}
 	}
@@ -34,7 +36,9 @@ public class JDBC {
 				con.close();
 				con = null;
 			} catch (SQLException e) {
-				e.printStackTrace();
+				plugin.jdbcError = true;
+				plugin.Errorcode = e.getErrorCode();
+				plugin.Errormsg = e.getMessage();
 			}
 		}
 	}
@@ -64,12 +68,12 @@ public class JDBC {
 		ArrayList<String> credits = new ArrayList<>();
 		credits = getAllCreditIds();
 		if(credits.size() == 0) {
-			createCredit("C1", "&b5.000$", 5000.00, 2.49, 7, 0);
-			createCredit("C2", "&b10.000$", 10000.00, 2.49, 7, 0);
-			createCredit("C3", "&b25.000$", 25000.00, 2.49, 7, 5);
-			createCredit("C4", "&b50.000$", 50000.00, 2.49, 7, 15);
-			createCredit("C5", "&b100.000$", 100000.00, 2.49, 7, 25);
-			createCredit("C6", "&b250.000$", 250000.00, 2.49, 7, 50);
+			createCredit("C1", "&b5.000 Münzen", 5000.00, 2.49, 7, 0);
+			createCredit("C2", "&b10.000 Münzen", 10000.00, 2.49, 7, 0);
+			createCredit("C3", "&b25.000 Münzen", 25000.00, 2.49, 7, 5);
+			createCredit("C4", "&b50.000 Münzen", 50000.00, 2.49, 7, 15);
+			createCredit("C5", "&b100.000 Münzen", 100000.00, 2.49, 7, 25);
+			createCredit("C6", "&b250.000 Münzen", 250000.00, 2.49, 7, 50);
 		}
 	}
 	

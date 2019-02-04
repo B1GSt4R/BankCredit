@@ -50,9 +50,9 @@ public class system extends JavaPlugin {
 	
 	public static Economy eco = null;
 	
-	public String strich = "§7§m---------------§8< §6§lBank§eCredit §8>§7§m---------------";
+	public static String strich = "§7§m---------------§8< §6§lBank§eCredit §8>§7§m---------------";
 	public String strichWarning = "§c§l!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!";
-	public String prefix = "§6§lBank§eCredit §8>> §7";
+	public static String prefix = "§6§lBank§eCredit §8>> §7";
 	public String menuPrefix = "§8Bank of §5BlockStone";
 	public String failed = prefix+"§c";
 	public String versionURL = "https://www.B1GSt4R.de/bukkit-plugins/BankCredit/version.rss";
@@ -73,7 +73,7 @@ public class system extends JavaPlugin {
 	public static String Errormsg = "";
 	public static int Errorcode = 0;
 	boolean host, port, dbname, user, pw;
-	static boolean jdbcError = false;
+	public static boolean jdbcError = false;
 	public boolean useSQL = false;
 	public boolean validLicense = false;
 	
@@ -143,13 +143,12 @@ public class system extends JavaPlugin {
 			dbname = sqlCfg.get("DBname") != null && !sqlCfg.get("DBname").equals("YourDataBase");
 			user = sqlCfg.get("Username") != null && !sqlCfg.get("Username").equals("YourUsername");
 			
-			msgLoader(true);
-			
 			getCommand(this.getDescription().getName()).setExecutor(new blockstone.B1GSt4R.BankCredit.Commands.bankCreditCMD(this));
 			
 			if(checkLicense(license)) {
 				if(host && port && dbname && user) {
 					sql.connect();
+					sql.initConnection();
 					useSQL = true;
 				}
 				
@@ -183,21 +182,10 @@ public class system extends JavaPlugin {
 								if(api.isExistsPlayerCredit(all, creditList.get(i))) {
 									if(api.getDate().equals(api.getNextPayDate(api.builderPlayerUUID_CreditID(all, creditList.get(i))))) {
 										if(api.getTime().equals(api.getNextPayTime(api.builderPlayerUUID_CreditID(all, creditList.get(i))))) {
-											if(api.getDaysLeft(api.builderPlayerUUID_CreditID(all, creditList.get(i))) > 1) {
-												double creditValue = api.getCreditValue(creditList.get(i));
-												double leaseTime = api.getCreditLeaseTime(creditList.get(i));
-												double remaining = api.getRemainingCreditValue(api.builderPlayerUUID_CreditID(all, creditList.get(i)));
-												double nominalzinssatz = api.getCreditPayTax(creditList.get(i)) / 100;
-												
-												double tilgung = creditValue / leaseTime;
-												double zinsen = remaining / leaseTime * nominalzinssatz;
-												
-												double value = Math.round(tilgung+zinsen);
-												value = Math.round(value*100)/100.0;
-												payOffCredit(all, creditList.get(i), value, false);
+											if(api.getRemainingCreditValue(api.builderPlayerUUID_CreditID(all, creditList.get(i))) != 0) {
+												payOffCredit(all, creditList.get(i), api.getPayOffTaxValue(all, creditList.get(i), false), 0, false);
 											}else {
-												double value = api.getRemainingCreditValue(api.builderPlayerUUID_CreditID(all, creditList.get(i)));
-												payOffCredit(all, creditList.get(i), value, false);
+												payOffCredit(all, creditList.get(i), 0, api.getPayOffTaxValue(all, creditList.get(i), true), false);
 											}
 										}
 									}
@@ -207,6 +195,7 @@ public class system extends JavaPlugin {
 					}
 				}, 0, 60*20);
 			}
+			msgLoader(true);
 		}else {
 			stoppOfVault();
 		}
@@ -255,8 +244,7 @@ public class system extends JavaPlugin {
 				CONSOLE.sendMessage("§7Status TimeRank: §4NOT FOUND");
 			}
 			
-			if(sql.isConnected()) {
-				sql.initConnection();
+			if(sql.isConnected() || useSQL) {
 				CONSOLE.sendMessage("§7Status MySQL: §2CONNECTED");
 			}else if(!sql.isConnected()){
 				if(jdbcError == true) {
@@ -303,7 +291,7 @@ public class system extends JavaPlugin {
 				CONSOLE.sendMessage("§7Status TimeRank: §4NOT FOUND");
 			}
 			
-			if(sql.isConnected()) {
+			if(sql.isConnected() || useSQL) {
 				CONSOLE.sendMessage("§7Status MySQL: §4DISCONNECTED");
 			}else if(!sql.isConnected()){
 				if(jdbcError == true) {
@@ -473,44 +461,107 @@ public class system extends JavaPlugin {
 		}
 	}
 	
-	public void payOffCredit(OfflinePlayer player, String CreditID, double value, boolean self) {
+	public static void payOffCredit(OfflinePlayer player, String CreditID, double remainingValue, double remainingPunishPay, boolean self) {
 		if(self) {
 			//p.closeInventory();
 		}
 		String PlayerUUID_CreditID = api.builderPlayerUUID_CreditID(player, CreditID);
-		EconomyResponse r = system.eco.withdrawPlayer(player, value);
+		EconomyResponse r1 = system.eco.withdrawPlayer(player, remainingValue);
+		EconomyResponse r2 = system.eco.withdrawPlayer(player, remainingPunishPay);
+		
 		Player p = null;
 		if(Bukkit.getPlayer(player.getUniqueId()) != null) {
 			p = Bukkit.getPlayer(player.getUniqueId());
 		}
-		if(r.transactionSuccess()) {
-			if(api.getRemainingCreditValue(PlayerUUID_CreditID) == value) {
-				if(p != null) {
-					p.sendMessage(prefix+"Du hast die restlichen §e"+value+ "$ §7zurück gezahlt.");
+		
+		if(remainingValue != 0) {
+			if(r1.transactionSuccess()) {
+				if(api.getRemainingCreditValue(PlayerUUID_CreditID) == remainingValue) {
+					if(p != null) {
+						p.sendMessage(prefix+"Du hast die restlichen §e"+remainingValue+ " Münzen §7zurück gezahlt.");
+					}
+					api.subtractDaysLeft(PlayerUUID_CreditID, 1);
+					api.subtractRemainingCreditValue(PlayerUUID_CreditID, remainingValue);
+					api.addNextPayDate(PlayerUUID_CreditID, 0, 0, 1);
+				}else {
+					api.subtractDaysLeft(PlayerUUID_CreditID, 1);
+					api.subtractRemainingCreditValue(PlayerUUID_CreditID, remainingValue);
+					api.addNextPayDate(PlayerUUID_CreditID, 0, 0, 1);
+					if(p != null) {
+						p.sendMessage(prefix+"Du hast §e"+remainingValue+" Münzen §7für deinen Kredit zurück gezahlt.");
+					}
 				}
-				api.removePlayerCredit(player, CreditID);
+				
 			}else {
-				api.subtractDaysLeft(PlayerUUID_CreditID, 1);
-				api.subtractRemainingCreditValue(PlayerUUID_CreditID, value);
-				api.addNextPayDate(PlayerUUID_CreditID, 0, 0, 1);
+				//p.sendMessage(plugin.failed+r.errorMessage);
 				if(p != null) {
-					p.sendMessage(prefix+"Du hast §e"+value+"$ §7für deinen Kredit zurück gezahlt.");
+					p.sendMessage(strich);
+					p.sendMessage(prefix+"§cDu hast nicht genug Geld auf deinem Konto!");
+					p.sendMessage("§7 ");
+					if(self) {
+						p.sendMessage(prefix+"Betrag: §e"+api.getRemainingCreditValue(PlayerUUID_CreditID)+" Münzen");
+						p.sendMessage(prefix+"Fehlender Betrag: §e"+(api.getRemainingCreditValue(PlayerUUID_CreditID)-eco.getBalance(p))+" Münzen");
+					}else {
+						p.sendMessage(prefix+"Betrag: §e"+api.getPayOffTaxValue(p, CreditID, false)+" Münzen");
+						p.sendMessage(prefix+"Fehlender Betrag: §e"+(api.getPayOffTaxValue(p, CreditID, false)-eco.getBalance(p))+" Münzen");
+					}
+					p.sendMessage(strich);
+				}
+				if(!self) {
+					api.addNextPayDate(PlayerUUID_CreditID, 0, 0, 1);
+					api.addNotPayedDays(PlayerUUID_CreditID, 1);
+					double punishPay = api.generatePunishPay(p, CreditID);
+					api.addPunishPay(PlayerUUID_CreditID, punishPay);
 				}
 			}
-			
-		}else {
-			//p.sendMessage(plugin.failed+r.errorMessage);
-			if(p != null) {
-				p.sendMessage(strich);
-				p.sendMessage(prefix+"§cDu hast nicht genug Geld auf deinem Konto!");
-				p.sendMessage("§7 ");
-				p.sendMessage(prefix+"Betrag: §e"+api.getRemainingCreditValue(PlayerUUID_CreditID)+"$");
-				p.sendMessage(prefix+"Fehlender Betrag: §e"+(api.getRemainingCreditValue(PlayerUUID_CreditID)-eco.getBalance(p))+"$");
-				p.sendMessage(strich);
+		}
+		
+		
+		if(remainingPunishPay != 0) {
+			if(r2.transactionSuccess()) {
+				if(api.getPunishPays(PlayerUUID_CreditID) == remainingPunishPay) {
+					if(p != null) {
+						p.sendMessage(prefix+"Du hast die restliche Strafe von §e"+remainingPunishPay+ "Münzen §7zurück gezahlt.");
+					}
+					api.subtractNotPayedDays(PlayerUUID_CreditID, 1);
+					api.subtractPunishPay(PlayerUUID_CreditID, remainingPunishPay);
+					api.addNextPayDate(PlayerUUID_CreditID, 0, 0, 1);
+				}else {
+					api.subtractNotPayedDays(PlayerUUID_CreditID, 1);
+					api.subtractPunishPay(PlayerUUID_CreditID, remainingPunishPay);
+					api.addNextPayDate(PlayerUUID_CreditID, 0, 0, 1);
+					if(p != null) {
+						p.sendMessage(prefix+"Du hast §e"+remainingPunishPay+"Münzen §7 Strafe für deinen Kredit zurück gezahlt.");
+					}
+				}
+				
+			}else {
+				//p.sendMessage(plugin.failed+r.errorMessage);
+				if(p != null) {
+					p.sendMessage(strich);
+					p.sendMessage(prefix+"§cDu hast nicht genug Geld auf deinem Konto!");
+					p.sendMessage("§7 ");
+					if(self) {
+						p.sendMessage(prefix+"Betrag: §e"+api.getPunishPays(PlayerUUID_CreditID)+" Münzen");
+						p.sendMessage(prefix+"Fehlender Betrag: §e"+(api.getPunishPays(PlayerUUID_CreditID)-eco.getBalance(p))+" Münzen");
+					}else {
+						p.sendMessage(prefix+"Betrag: §e"+api.getPayOffTaxValue(p, CreditID, true)+" Münzen");
+						p.sendMessage(prefix+"Fehlender Betrag: §e"+(api.getPayOffTaxValue(p, CreditID, true)-eco.getBalance(p))+" Münzen");
+					}
+					p.sendMessage(strich);
+				}
+				if(!self) {
+					api.addNextPayDate(PlayerUUID_CreditID, 0, 0, 1);
+					api.addNotPayedDays(PlayerUUID_CreditID, 1);
+					double punishPay = api.generatePunishPay(p, CreditID);
+					api.addPunishPay(PlayerUUID_CreditID, punishPay);
+				}
 			}
-			if(!self) {
-				api.addNextPayDate(PlayerUUID_CreditID, 0, 0, 1);
-				api.addNotPayedDays(PlayerUUID_CreditID, 1);
+		}
+		
+		if(r1.transactionSuccess() && r2.transactionSuccess()) {
+			if(api.getRemainingCreditValue(PlayerUUID_CreditID) == 0 && api.getPunishPays(PlayerUUID_CreditID) == 0) {
+				api.removePlayerCredit(player, CreditID);
 			}
 		}
 	}

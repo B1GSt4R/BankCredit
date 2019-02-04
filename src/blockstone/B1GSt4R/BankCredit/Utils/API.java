@@ -684,11 +684,68 @@ public class API {
 		return p.getUniqueId().toString()+"_"+CreditID.toString();
 	}
 	
-	public static double getPayOffTaxValue(OfflinePlayer p, String CreditID) {
+	public static double getPayOffTaxValue(OfflinePlayer p, String CreditID, boolean punishPay) {
+		if(plugin.sql.isConnected()) {
+			if(!punishPay) {
+				if(getDaysLeft(builderPlayerUUID_CreditID(p, CreditID)) > 1) {
+					double creditValue = getCreditValue(CreditID);
+					double leaseTime = getCreditLeaseTime(CreditID);
+					double remaining = getRemainingCreditValue(builderPlayerUUID_CreditID(p, CreditID));
+					double nominalzinssatz = getCreditPayTax(CreditID) / 100;
+					
+					double tilgung = creditValue / leaseTime;
+					double zinsen = remaining / leaseTime * nominalzinssatz;
+					
+					double value = tilgung+zinsen;
+					value = Math.round(value*100.0)/100.0;
+					return value;
+				}else {
+					double value = getRemainingCreditValue(builderPlayerUUID_CreditID(p, CreditID));
+					return value;
+				}
+			}else {
+				if(getNotPayedDays(builderPlayerUUID_CreditID(p, CreditID)) > 1) {
+					double creditValue = getCreditValue(CreditID);
+					double leaseTime = getNotPayedDays(builderPlayerUUID_CreditID(p, CreditID));
+					double remaining = getPunishPays(builderPlayerUUID_CreditID(p, CreditID));
+					double nominalzinssatz = getCreditPayTax(CreditID) / 100.0;
+					
+					double tilgung = creditValue / leaseTime;
+					double zinsen = remaining / leaseTime * nominalzinssatz;
+					
+					double value = tilgung+zinsen;
+					value = Math.round(value*100.0)/100.0;
+					System.out.println(value);
+					return value;
+				}else {
+					double value = getPunishPays(builderPlayerUUID_CreditID(p, CreditID));
+					return value;
+				}
+			}
+		}else {
+			
+		}
 		return 0.00;
 	}
 	
 	public static double generatePunishPay(OfflinePlayer p, String CreditID) {
+		if(plugin.sql.isConnected()) {
+			int notPayedDays = getNotPayedDays(builderPlayerUUID_CreditID(p, CreditID));
+			double notPayedDaysTax = notPayedDays / 100.0 + 1.0;
+			double tax = getCreditPayTax(CreditID) / 100 + 1;
+			double creditPayOff = 0.0;
+			if(getRemainingCreditValue(builderPlayerUUID_CreditID(p, CreditID)) != 0) {
+				creditPayOff = getPayOffTaxValue(p, CreditID, false);
+			}else {
+				creditPayOff = getPayOffTaxValue(p, CreditID, true);
+			}
+			
+			double value = creditPayOff*tax*notPayedDaysTax;
+			return value;
+			
+		}else {
+			
+		}
 		return 0.00;
 	}
 	

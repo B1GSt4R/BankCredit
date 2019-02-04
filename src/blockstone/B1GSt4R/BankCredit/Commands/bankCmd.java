@@ -155,22 +155,22 @@ public class bankCmd implements CommandExecutor {
 				lore.add("§7 ");
 				lore.add("§7§m-----<§6 Credit Informations §7§m>-----");
 				lore.add("§7CreditID: §6"+credits.get(i));
-				lore.add("§7Value: §6"+plugin.api.addZerosToDouble(plugin.api.getCreditValue(credits.get(i)))+"$");
+				lore.add("§7Value: §6"+plugin.api.addZerosToDouble(plugin.api.getCreditValue(credits.get(i)))+" Münzen");
 				lore.add("§7Tax: §6"+plugin.api.getCreditPayTax(credits.get(i))+"%");
 				lore.add("§7LeaseTime: §6"+plugin.api.getCreditLeaseTime(credits.get(i))+" days");
 				lore.add("§7 ");
 				lore.add("§7§m-----<§6 Personal Informations §7§m>-----");
-				lore.add("§7Remaining Value: §6"+plugin.api.addZerosToDouble(plugin.api.getRemainingCreditValue(PlayerUUID_CreditID))+"$");
+				lore.add("§7Remaining Value: §6"+plugin.api.addZerosToDouble(plugin.api.getRemainingCreditValue(PlayerUUID_CreditID))+" Münzen");
 				lore.add("§7Remaining Days: §6"+plugin.api.getDaysLeft(PlayerUUID_CreditID)+" days");
 				if(plugin.eco.getBalance(p) >= value) {
-					lore.add("§7Next Pay Value: §a"+plugin.api.addZerosToDouble(value)+"$");
+					lore.add("§7Next Pay Value: §a"+plugin.api.addZerosToDouble(value)+" Münzen");
 				}else {
-					lore.add("§7Next Pay Value: §c"+plugin.api.addZerosToDouble(value)+"$");
+					lore.add("§7Next Pay Value: §c"+plugin.api.addZerosToDouble(value)+" Münzen");
 				}
 				lore.add("§7Deferrals: §6"+plugin.api.getDeferralCounter(PlayerUUID_CreditID)+"x");
 				lore.add("§7Not Payed Days: §6"+plugin.api.getNotPayedDays(PlayerUUID_CreditID)+" days");
-				lore.add("§7Extra Pays: §6"+plugin.api.addZerosToDouble(plugin.api.getExtraPays(PlayerUUID_CreditID))+"$");
-				lore.add("§7Punish Pay: §6"+plugin.api.addZerosToDouble(plugin.api.getPunishPays(PlayerUUID_CreditID))+"$");
+				lore.add("§7Extra Pays: §6"+plugin.api.addZerosToDouble(plugin.api.getExtraPays(PlayerUUID_CreditID))+" Münzen");
+				lore.add("§7Punish Pay: §6"+plugin.api.addZerosToDouble(plugin.api.getPunishPays(PlayerUUID_CreditID))+" Münzen");
 				creditMeta.setLore(lore);
 				credit.setItemMeta(creditMeta);
 			}else {
@@ -185,7 +185,7 @@ public class bankCmd implements CommandExecutor {
 				ArrayList<String> lore = new ArrayList<>();
 				lore.add("§7 ");
 				lore.add("§7CreditID: §6"+credits.get(i));
-				lore.add("§7Value: §6"+plugin.api.addZerosToDouble(plugin.api.getCreditValue(credits.get(i)))+"$");
+				lore.add("§7Value: §6"+plugin.api.addZerosToDouble(plugin.api.getCreditValue(credits.get(i)))+" Münzen");
 				lore.add("§7Tax: §6"+plugin.api.getCreditPayTax(credits.get(i))+"%");
 				lore.add("§7LeaseTime: §6"+plugin.api.getCreditLeaseTime(credits.get(i))+" days");
 				creditMeta.setLore(lore);
