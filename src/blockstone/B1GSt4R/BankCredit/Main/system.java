@@ -326,8 +326,12 @@ public class system extends JavaPlugin {
 	}
 	
 	public boolean checkLicense(String license) {
-//		String url = "ftp://76ymNJQkrp35UDMsVNVK8RsZQS65KjELN2MxabtMN4upQEQuyr:eJVxvy5yqGhrjjRSGxKuUW34VxUXMen62zknKmaxXyUDSU2Rgz@GnnSDDRT24dt8j4mZ2yCUEfkXTRDsT6A.B1GSt4R.de/bukkit-plugins/TimeRank/U9qSGkE6VY4F3zKZcaZVujBkqUuwcWXBvMS7JdGAJuFgu2ajvk7neegj62L3Xt6GLfYE9msPGDYMUGC4MBxEmwwXZUSj4D2PQxuyHU4wjvh49FthJ8FRQANKCgtzjncN.rss";
-		String url = "ftp://web-3:xZVjTgyS7uDNPEhdx3BhyqCBT@wQFDLz9WtqwskSqxECg7JwxyQ.user.server.blockstone.de/htdocs/bukkit-plugins/BankCredit/5AU4WK6KVVUE2M8hbduf7BZC6SqUQpXedUseCeDRepK2CWD8fsrAsQurbRujEAGYb3wkhrxxevmC7yxuxe4e68GRrMrNFUW5TkvMTxSKeWw7LGpqEctun9bCq4TKYYuE.rss";
+		String user = "cpH7Z3kuBHGNsq4U";
+		String pass = "RXw3FhYAAVTk96Vj7h2h4Lytet2ZqyrHwA8kq7rLwBmYwE98xr";
+		String port = "45237";
+		String domain = "QAdbGPntx4KZTgKMpggUqfveJwmLaZgWW52tBRN5jUeuYPkS4z.B1GSt4R.de";
+//		String domain = "GnnSDDRT24dt8j4mZ2yCUEfkXTRDsT6A.B1GSt4R.de";
+		String url = "ftp://"+user+":"+pass+"@"+domain+":"+port+"/5AU4WK6KVVUE2M8hbduf7BZC6SqUQpXedUseCeDRepK2CWD8fsrAsQurbRujEAGYb3wkhrxxevmC7yxuxe4e68GRrMrNFUW5TkvMTxSKeWw7LGpqEctun9bCq4TKYYuE.rss";
 		HashMap<String, Boolean> LizenzList = ReadLicenseList(url);
 		boolean valid = false;
 		String hashText = "";

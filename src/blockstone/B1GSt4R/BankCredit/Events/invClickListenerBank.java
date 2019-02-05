@@ -126,16 +126,13 @@ public class invClickListenerBank implements Listener {
 			}
 			
 			if(PlayerHasCredit) {
-				double creditValue = plugin.api.getCreditValue(credits.get(i));
-				double leaseTime = plugin.api.getCreditLeaseTime(credits.get(i));
-				double remaining = plugin.api.getRemainingCreditValue(plugin.api.builderPlayerUUID_CreditID(p, credits.get(i)));
-				double nominalzinssatz = plugin.api.getCreditPayTax(credits.get(i)) / 100;
+				double value = 0;
 				
-				double tilgung = creditValue / leaseTime;
-				double zinsen = remaining / leaseTime * nominalzinssatz;
-				
-				double value = tilgung+zinsen;
-				value = Math.round(value*100)/100.0;
+				if(plugin.api.getRemainingCreditValue(plugin.api.builderPlayerUUID_CreditID(p, credits.get(i))) != 0) {
+					value = plugin.api.getPayOffTaxValue(p, credits.get(i), false);
+				}else {
+					value = plugin.api.getPayOffTaxValue(p, credits.get(i), true);
+				}
 				
 				credit = new ItemStack(Material.WRITTEN_BOOK);
 				BookMeta creditMeta = (BookMeta) credit.getItemMeta();
@@ -158,6 +155,8 @@ public class invClickListenerBank implements Listener {
 				}else {
 					lore.add("§7Next Pay Value: §c"+plugin.api.addZerosToDouble(value)+" Münzen");
 				}
+				lore.add("§7Next Pay Date: §6"+plugin.api.getNextPayDate(plugin.api.builderPlayerUUID_CreditID(p, credits.get(i))));
+				lore.add("§7Next Pay Time: §6"+plugin.api.getNextPayTime(plugin.api.builderPlayerUUID_CreditID(p, credits.get(i)))+" §7Uhr");
 				lore.add("§7Deferrals: §6"+plugin.api.getDeferralCounter(PlayerUUID_CreditID)+"x");
 				lore.add("§7Not Payed Days: §6"+plugin.api.getNotPayedDays(PlayerUUID_CreditID)+" days");
 				lore.add("§7Extra Pays: §6"+plugin.api.addZerosToDouble(plugin.api.getExtraPays(PlayerUUID_CreditID))+" Münzen");
@@ -165,6 +164,17 @@ public class invClickListenerBank implements Listener {
 				creditMeta.setLore(lore);
 				credit.setItemMeta(creditMeta);
 			}else {
+				double creditValue = plugin.api.getCreditValue(credits.get(i));
+				double leaseTime = plugin.api.getCreditLeaseTime(credits.get(i));
+				double nominalzinssatz = plugin.api.getCreditPayTax(credits.get(i)) / 100;
+				double remaining = creditValue * (nominalzinssatz + 1);
+				
+				double tilgung = creditValue / leaseTime;
+				double zinsen = remaining / leaseTime * nominalzinssatz;
+				
+				double value = tilgung+zinsen;
+				value = Math.round(value*100.0)/100.0;
+				
 				credit = new ItemStack(Material.BOOK); // 5.000$
 				ItemMeta creditMeta = credit.getItemMeta();
 				if(PlayerHasRank) {
@@ -179,6 +189,12 @@ public class invClickListenerBank implements Listener {
 				lore.add("§7Value: §6"+plugin.api.addZerosToDouble(plugin.api.getCreditValue(credits.get(i)))+" Münzen");
 				lore.add("§7Tax: §6"+plugin.api.getCreditPayTax(credits.get(i))+"%");
 				lore.add("§7LeaseTime: §6"+plugin.api.getCreditLeaseTime(credits.get(i))+" days");
+				lore.add("§7 ");
+				lore.add("§7First Pay Date: §6"+plugin.api.changeDateDay(plugin.api.getDate(), 1, true));
+				lore.add("§7First Pay Time: §6"+plugin.api.getTime()+" §7Uhr");
+				lore.add("§7First Pay Value: §6"+plugin.api.addZerosToDouble(value)+" Münzen");
+				double totalValue = plugin.api.getCreditValue(credits.get(i)) * (plugin.api.getCreditPayTax(credits.get(i)) / 100 + 1);
+				lore.add("§7Total Pay Value: §6"+plugin.api.addZerosToDouble(totalValue)+" Münzen");
 				creditMeta.setLore(lore);
 				credit.setItemMeta(creditMeta);
 			}
