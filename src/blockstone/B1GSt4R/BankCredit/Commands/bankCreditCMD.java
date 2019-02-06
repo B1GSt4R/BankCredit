@@ -32,7 +32,7 @@ public class bankCreditCMD implements CommandExecutor {
 					p.sendMessage(plugin.prefix+"New Version: §6"+newVersion);
 					p.sendMessage(" ");
 					p.sendMessage(plugin.prefix+"Download Link below:");
-					p.sendMessage(plugin.prefix+"https://www.B1GSt4R.de/my-account/downloads/");
+					p.sendMessage(plugin.prefix+"https://B1GSt4R.de/my-account/downloads/");
 					p.sendMessage(plugin.strichWarning);
 					
 					plugin.CONSOLE.sendMessage(plugin.strichWarning);
@@ -41,7 +41,7 @@ public class bankCreditCMD implements CommandExecutor {
 					plugin.CONSOLE.sendMessage(plugin.prefix+"New Version: §6"+newVersion);
 					plugin.CONSOLE.sendMessage(" ");
 					plugin.CONSOLE.sendMessage(plugin.prefix+"Download Link below:");
-					plugin.CONSOLE.sendMessage(plugin.prefix+"https://www.B1GSt4R.de/my-account/downloads/");
+					plugin.CONSOLE.sendMessage(plugin.prefix+"https://B1GSt4R.de/my-account/downloads/");
 					plugin.CONSOLE.sendMessage(plugin.strichWarning);
 				}
 			}else {
@@ -52,7 +52,7 @@ public class bankCreditCMD implements CommandExecutor {
 					plugin.CONSOLE.sendMessage(plugin.prefix+"New Version: §6"+newVersion);
 					plugin.CONSOLE.sendMessage(" ");
 					plugin.CONSOLE.sendMessage(plugin.prefix+"Download Link below:");
-					plugin.CONSOLE.sendMessage(plugin.prefix+"https://www.B1GSt4R.de/my-account/downloads/");
+					plugin.CONSOLE.sendMessage(plugin.prefix+"https://B1GSt4R.de/my-account/downloads/");
 					plugin.CONSOLE.sendMessage(plugin.strichWarning);
 				}
 			}

@@ -55,7 +55,7 @@ public class system extends JavaPlugin {
 	public static String prefix = "§6§lBank§eCredit §8>> §7";
 	public String menuPrefix = "§8Bank of §5BlockStone";
 	public String failed = prefix+"§c";
-	public String versionURL = "https://www.B1GSt4R.de/bukkit-plugins/BankCredit/version.rss";
+	public String versionURL = "https://B1GSt4R.de/bukkit-plugins/BankCredit/version.rss";
 	public String license;
 	
 	public boolean TimeRank = pm.getPlugin("TimeRank") != null;
@@ -504,17 +504,17 @@ public class system extends JavaPlugin {
 					p.sendMessage("§7 ");
 					if(self) {
 						p.sendMessage(prefix+"Betrag: §e"+api.getRemainingCreditValue(PlayerUUID_CreditID)+" Münzen");
-						p.sendMessage(prefix+"Fehlender Betrag: §e"+(api.getRemainingCreditValue(PlayerUUID_CreditID)-eco.getBalance(p))+" Münzen");
+						p.sendMessage(prefix+"Fehlender Betrag: §e"+(api.getRemainingCreditValue(PlayerUUID_CreditID)-eco.getBalance(player))+" Münzen");
 					}else {
-						p.sendMessage(prefix+"Betrag: §e"+api.getPayOffTaxValue(p, CreditID, false)+" Münzen");
-						p.sendMessage(prefix+"Fehlender Betrag: §e"+(api.getPayOffTaxValue(p, CreditID, false)-eco.getBalance(p))+" Münzen");
+						p.sendMessage(prefix+"Betrag: §e"+api.getPayOffTaxValue(player, CreditID, false)+" Münzen");
+						p.sendMessage(prefix+"Fehlender Betrag: §e"+(api.getPayOffTaxValue(player, CreditID, false)-eco.getBalance(player))+" Münzen");
 					}
 					p.sendMessage(strich);
 				}
 				if(!self) {
 					api.addNextPayDate(PlayerUUID_CreditID, 0, 0, 1);
 					api.addNotPayedDays(PlayerUUID_CreditID, 1);
-					double punishPay = api.generatePunishPay(p, CreditID);
+					double punishPay = api.generatePunishPay(player, CreditID);
 					api.addPunishPay(PlayerUUID_CreditID, punishPay);
 				}
 			}
@@ -568,50 +568,5 @@ public class system extends JavaPlugin {
 				api.removePlayerCredit(player, CreditID);
 			}
 		}
-	}
-	
-	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-		if(cmd.getName().equalsIgnoreCase(this.getDescription().getName())) {
-			String newVersion = ReadURL(versionURL);
-			if(sender instanceof Player) {
-				Player p = (Player)sender;
-				boolean perm = p.isOp() ||
-						p.hasPermission(adminPerms[0]) ||
-						p.hasPermission(adminPerms[1]) ||
-						p.hasPermission(adminPerms[2]) ||
-						p.hasPermission(adminPerms[13]);
-				if(perm && !newVersion.equals(getDescription().getVersion())) {
-					p.sendMessage(strichWarning);
-					p.sendMessage(prefix+"There is a new Version!");
-					p.sendMessage(prefix+"Current Version: §6"+getDescription().getVersion());
-					p.sendMessage(prefix+"New Version: §6"+newVersion);
-					p.sendMessage(" ");
-					p.sendMessage(prefix+"Download Link below:");
-					p.sendMessage(prefix+"https://www.B1GSt4R.de/my-account/downloads/");
-					p.sendMessage(strichWarning);
-					
-					CONSOLE.sendMessage(strichWarning);
-					CONSOLE.sendMessage(prefix+"There is a new Version!");
-					CONSOLE.sendMessage(prefix+"Current Version: §6"+getDescription().getVersion());
-					CONSOLE.sendMessage(prefix+"New Version: §6"+newVersion);
-					CONSOLE.sendMessage(" ");
-					CONSOLE.sendMessage(prefix+"Download Link below:");
-					CONSOLE.sendMessage(prefix+"https://www.B1GSt4R.de/my-account/downloads/");
-					CONSOLE.sendMessage(strichWarning);
-				}
-			}else {
-				if(!newVersion.equals(getDescription().getVersion())) {
-					CONSOLE.sendMessage(strichWarning);
-					CONSOLE.sendMessage(prefix+"There is a new Version!");
-					CONSOLE.sendMessage(prefix+"Current Version: §6"+getDescription().getVersion());
-					CONSOLE.sendMessage(prefix+"New Version: §6"+newVersion);
-					CONSOLE.sendMessage(" ");
-					CONSOLE.sendMessage(prefix+"Download Link below:");
-					CONSOLE.sendMessage(prefix+"https://www.B1GSt4R.de/my-account/downloads/");
-					CONSOLE.sendMessage(strichWarning);
-				}
-			}
-		}
-		return true;
 	}
 }
