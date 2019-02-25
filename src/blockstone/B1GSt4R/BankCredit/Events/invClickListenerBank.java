@@ -35,49 +35,6 @@ public class invClickListenerBank implements Listener {
 		
 		
 		if(e.getInventory() != null && e.getInventory().getTitle() != null && e.getClickedInventory() != null) {
-			plugin.GuiAPI.fillLists("");
-			plugin.GuiAPI.clearLists(false);
-			boolean bName = e.getInventory().getTitle().equals(plugin.titleAllUsers+plugin.GuiAPI.titleStats) || e.getInventory().getTitle().equals(plugin.titleActiveUsers+plugin.GuiAPI.titleStats) ||
-					e.getInventory().getTitle().equals(plugin.titleInactiveUsers+plugin.GuiAPI.titleStats) || e.getInventory().getTitle().equals(plugin.titleInactiveCreditUsers+plugin.GuiAPI.titleStats) ||
-					e.getInventory().getTitle().equals(plugin.titleOnlyInactiveCreditUsers+plugin.GuiAPI.titleStats);
-			if(bName) {
-				e.setCancelled(true);
-				credits = plugin.api.getAllCreditIds();
-				if(e.getCurrentItem().getItemMeta() != null && e.getCurrentItem().getItemMeta().getDisplayName() != null) {
-					String sName = e.getCurrentItem().getItemMeta().getDisplayName().substring(2);
-					for(OfflinePlayer op : Bukkit.getOfflinePlayers()) {	
-						if(sName.equals(op.getName())) {
-							p.closeInventory();
-							Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-								@Override
-								public void run() {
-									p.openInventory(creditMenu(op, false, e.getCurrentItem().getItemMeta().getDisplayName()));
-								}
-							}, 1);
-						}
-					}
-				}
-			}
-			
-			if(e.getInventory().getTitle().startsWith("§8Bank of ")) {
-				e.setCancelled(true);
-				if(e.getCurrentItem().getItemMeta() != null && e.getCurrentItem().getItemMeta().getDisplayName() != null && e.getCurrentItem().getItemMeta().getDisplayName().equalsIgnoreCase("§cExit")){
-					p.closeInventory();
-				}
-				if(e.getCurrentItem().getItemMeta() != null && e.getCurrentItem().getItemMeta().getDisplayName() != null && e.getCurrentItem().getItemMeta().getDisplayName().equalsIgnoreCase("§cZurück")) {
-					p.closeInventory();
-					Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-						@Override
-						public void run() {	
-							plugin.GuiAPI.clearLists(true);
-							plugin.GuiAPI.fillLists("InactiveCredit");
-							p.openInventory(plugin.GuiAPI.InactivePlayersWithCredit(p));
-							plugin.GuiAPI.clearLists(true);
-						}
-					}, 1);
-				}
-			}
-			
 			if(e.getInventory().getTitle().equals(plugin.titleAllUsers+plugin.GuiAPI.titleStats)) {
 				if(e.getCurrentItem().getItemMeta() != null && e.getCurrentItem().getItemMeta().getDisplayName() != null && e.getCurrentItem().getItemMeta().getDisplayName().equalsIgnoreCase(plugin.itemAllUsers)){
 
@@ -302,30 +259,70 @@ public class invClickListenerBank implements Listener {
 				}else if(e.getCurrentItem().getItemMeta() != null && e.getCurrentItem().getItemMeta().getDisplayName() != null && e.getCurrentItem().getItemMeta().getDisplayName().equalsIgnoreCase(plugin.itemOnlyInactiveCreditUsers)){
 
 				}
+			}else
+			if(e.getInventory().getTitle().equals(plugin.menuPrefix)) {
+				e.setCancelled(true);
+				if(e.getCurrentItem().getItemMeta() != null && e.getCurrentItem().getItemMeta().getDisplayName() != null) {
+					for(int i = 0; i<credits.size(); i++){
+						if(e.getCurrentItem().getItemMeta().getDisplayName().equals(plugin.api.getCreditName(credits.get(i)).replace('&', '§'))) {
+							double cValue = plugin.api.getCreditValue(credits.get(i));
+							plugin.addMoney(p, cValue);
+							double value = plugin.api.getCreditValue(credits.get(i)) * (plugin.api.getCreditPayTax(credits.get(i)) / 100 + 1);
+							plugin.api.createPlayerCredit(p, credits.get(i), plugin.api.changeDateDay(plugin.api.getDate(), 1, true), plugin.api.getTime(), plugin.api.getCreditLeaseTime(credits.get(i)), value, 0, 0, 0.00, 0.00);
+							i = credits.size();
+							refreshCreditMenu(p, true);
+						}else if(e.getCurrentItem().getItemMeta().getDisplayName().equals("§aAlready in use")) {
+							String CreditID = e.getCurrentItem().getItemMeta().getLore().get(2).substring(14);
+							double getRemainingValue = plugin.api.getRemainingCreditValue(plugin.api.builderPlayerUUID_CreditID(p, CreditID));
+							double getRemaingPunishPay = plugin.api.getPunishPays(plugin.api.builderPlayerUUID_CreditID(p, CreditID));
+							plugin.payOffCredit(p, CreditID, getRemainingValue, getRemaingPunishPay, true);
+							i = credits.size();
+							refreshCreditMenu(p, true);
+						}else if(e.getCurrentItem().getItemMeta().getDisplayName().equals("§cExit")) {
+							p.closeInventory();
+						}else if(e.getCurrentItem().getItemMeta().getDisplayName().equals("§cBack")) {
+						}
+					}
+				}
+			}else
+			if(e.getInventory().getTitle().startsWith("§8Bank of [")) {
+				e.setCancelled(true);
+				if(e.getCurrentItem().getItemMeta() != null && e.getCurrentItem().getItemMeta().getDisplayName() != null && e.getCurrentItem().getItemMeta().getDisplayName().equalsIgnoreCase("§cExit")){
+					p.closeInventory();
+				}
+				if(e.getCurrentItem().getItemMeta() != null && e.getCurrentItem().getItemMeta().getDisplayName() != null && e.getCurrentItem().getItemMeta().getDisplayName().equalsIgnoreCase("§cZurück")) {
+					p.closeInventory();
+					Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+						@Override
+						public void run() {	
+							plugin.GuiAPI.clearLists(true);
+							plugin.GuiAPI.fillLists("InactiveCredit");
+							p.openInventory(plugin.GuiAPI.InactivePlayersWithCredit(p));
+							plugin.GuiAPI.clearLists(true);
+						}
+					}, 1);
+				}
 			}
-		}
-		
-		if(e.getInventory() != null && e.getInventory().getTitle() != null && e.getInventory().getTitle().equals(plugin.menuPrefix) && e.getClickedInventory() != null) {
-			e.setCancelled(true);
-			if(e.getCurrentItem().getItemMeta() != null && e.getCurrentItem().getItemMeta().getDisplayName() != null) {
-				for(int i = 0; i<credits.size(); i++){
-					if(e.getCurrentItem().getItemMeta().getDisplayName().equals(plugin.api.getCreditName(credits.get(i)).replace('&', '§'))) {
-						double cValue = plugin.api.getCreditValue(credits.get(i));
-						plugin.addMoney(p, cValue);
-						double value = plugin.api.getCreditValue(credits.get(i)) * (plugin.api.getCreditPayTax(credits.get(i)) / 100 + 1);
-						plugin.api.createPlayerCredit(p, credits.get(i), plugin.api.changeDateDay(plugin.api.getDate(), 1, true), plugin.api.getTime(), plugin.api.getCreditLeaseTime(credits.get(i)), value, 0, 0, 0.00, 0.00);
-						i = credits.size();
-						refreshCreditMenu(p, true);
-					}else if(e.getCurrentItem().getItemMeta().getDisplayName().equals("§aAlready in use")) {
-						String CreditID = e.getCurrentItem().getItemMeta().getLore().get(2).substring(14);
-						double getRemainingValue = plugin.api.getRemainingCreditValue(plugin.api.builderPlayerUUID_CreditID(p, CreditID));
-						double getRemaingPunishPay = plugin.api.getPunishPays(plugin.api.builderPlayerUUID_CreditID(p, CreditID));
-						plugin.payOffCredit(p, CreditID, getRemainingValue, getRemaingPunishPay, true);
-						i = credits.size();
-						refreshCreditMenu(p, true);
-					}else if(e.getCurrentItem().getItemMeta().getDisplayName().equals("§cExit")) {
-						p.closeInventory();
-					}else if(e.getCurrentItem().getItemMeta().getDisplayName().equals("§cBack")) {
+			plugin.GuiAPI.fillLists("");
+			plugin.GuiAPI.clearLists(false);
+			boolean bName = e.getInventory().getTitle().equals(plugin.titleAllUsers+plugin.GuiAPI.titleStats) || e.getInventory().getTitle().equals(plugin.titleActiveUsers+plugin.GuiAPI.titleStats) ||
+					e.getInventory().getTitle().equals(plugin.titleInactiveUsers+plugin.GuiAPI.titleStats) || e.getInventory().getTitle().equals(plugin.titleInactiveCreditUsers+plugin.GuiAPI.titleStats) ||
+					e.getInventory().getTitle().equals(plugin.titleOnlyInactiveCreditUsers+plugin.GuiAPI.titleStats);
+			if(bName) {
+				e.setCancelled(true);
+				credits = plugin.api.getAllCreditIds();
+				if(e.getCurrentItem().getItemMeta() != null && e.getCurrentItem().getItemMeta().getDisplayName() != null) {
+					String sName = e.getCurrentItem().getItemMeta().getDisplayName().substring(2);
+					for(OfflinePlayer op : Bukkit.getOfflinePlayers()) {	
+						if(sName.equals(op.getName())) {
+							p.closeInventory();
+							Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+								@Override
+								public void run() {
+									p.openInventory(creditMenu(op, false, e.getCurrentItem().getItemMeta().getDisplayName()));
+								}
+							}, 1);
+						}
 					}
 				}
 			}
@@ -493,42 +490,42 @@ public class invClickListenerBank implements Listener {
 		
 		Inventory inv = null;
 		if(credits.size() <= 9*1) {
-			inv = Bukkit.createInventory(null, 9*1, "§8Bank of "+playerDisplayname);
+			inv = Bukkit.createInventory(null, 9*1, "§8Bank of ["+playerDisplayname+"§8]");
 			if(exitMenu) {
 				inv.setItem(9*1-1, exit);
 			}else {
 				inv.setItem(9*1-1, back);
 			}
 		}else if(credits.size() <= 9*2) {
-			inv = Bukkit.createInventory(null, 9*2, "§8Bank of "+playerDisplayname);
+			inv = Bukkit.createInventory(null, 9*2, "§8Bank of ["+playerDisplayname+"§8]");
 			if(exitMenu) {
 				inv.setItem(9*2-1, exit);
 			}else {
 				inv.setItem(9*2-1, back);
 			}
 		}else if(credits.size() <= 9*3) {
-			inv = Bukkit.createInventory(null, 9*3, "§8Bank of "+playerDisplayname);
+			inv = Bukkit.createInventory(null, 9*3, "§8Bank of ["+playerDisplayname+"§8]");
 			if(exitMenu) {
 				inv.setItem(9*3-1, exit);
 			}else {
 				inv.setItem(9*3-1, back);
 			}
 		}else if(credits.size() <= 9*4) {
-			inv = Bukkit.createInventory(null, 9*4, "§8Bank of "+playerDisplayname);
+			inv = Bukkit.createInventory(null, 9*4, "§8Bank of ["+playerDisplayname+"§8]");
 			if(exitMenu) {
 				inv.setItem(9*4-1, exit);
 			}else {
 				inv.setItem(9*4-1, back);
 			}
 		}else if(credits.size() <= 9*5) {
-			inv = Bukkit.createInventory(null, 9*5, "§8Bank of "+playerDisplayname);
+			inv = Bukkit.createInventory(null, 9*5, "§8Bank of ["+playerDisplayname+"§8]");
 			if(exitMenu) {
 				inv.setItem(9*5-1, exit);
 			}else {
 				inv.setItem(9*5-1, back);
 			}
 		}else if(credits.size() < 9*6) {
-			inv = Bukkit.createInventory(null, 9*6, "§8Bank of "+playerDisplayname);
+			inv = Bukkit.createInventory(null, 9*6, "§8Bank of ["+playerDisplayname+"§8]");
 			if(exitMenu) {
 				inv.setItem(9*6-1, exit);
 			}else {
