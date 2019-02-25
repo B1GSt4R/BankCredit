@@ -17,8 +17,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -39,10 +37,17 @@ import net.milkbowl.vault.economy.EconomyResponse;
 @SuppressWarnings("static-access")
 public class system extends JavaPlugin {
 	
+	/*
+	 * log if use get credit and wich commands will be run by the user (money pay user cash / gui geld einzahlen / trade)  
+	 * Lastseen over 7 days feedback when user has credit mit gui
+	 * 
+	 */
+	
 	public static blockstone.B1GSt4R.BankCredit.Utils.JDBC sql;
 	public static blockstone.B1GSt4R.BankCredit.Utils.API api;
 	public static blockstone.B1GSt4R.BankCredit.Utils.creditConfigSystem credit;
 	public static blockstone.B1GSt4R.BankCredit.Utils.schufaSystem schufa;
+	public static blockstone.B1GSt4R.BankCredit.Utils.GuiAPI GuiAPI;
 	public static blockstone.B1GSt4R.timeRank.Main.system timeRankAPI;
 	
 	public ConsoleCommandSender CONSOLE = this.getServer().getConsoleSender();
@@ -57,6 +62,18 @@ public class system extends JavaPlugin {
 	public String failed = prefix+"§c";
 	public String versionURL = "https://B1GSt4R.de/bukkit-plugins/BankCredit/version.rss";
 	public String license;
+	
+	public static String titleAllUsers = "§2Show all Players                         ";
+	public static String titleActiveUsers = "§aAll Active Users                          ";
+	public static String titleInactiveUsers = "§eInactive Players                            ";
+	public static String titleInactiveCreditUsers = "§cInactive Players with a Credit          ";
+	public static String titleOnlyInactiveCreditUsers = "§4Only inactives with Credit              ";
+	
+	public static String itemAllUsers = "§2Show all Players";
+	public static String itemActiveUsers = "§aAll Active Users";
+	public static String itemInactiveUsers = "§eInactive Players for over 4 days";
+	public static String itemInactiveCreditUsers = "§cInactive Players with a Credit";
+	public static String itemOnlyInactiveCreditUsers = "§4Only inactive Players with a credit";
 	
 	public boolean TimeRank = pm.getPlugin("TimeRank") != null;
 	public boolean Vault = pm.getPlugin("Vault") != null;
@@ -91,7 +108,8 @@ public class system extends JavaPlugin {
 			/*11.*/		"BankCredit.admin.rank.del",
 			/*12.*/		"BankCredit.admin.help.*",
 			/*13.*/		"BankCredit.admin.help.admin",
-			/*14.*/		"BankCredit.admin.version"
+			/*14.*/		"BankCredit.admin.version",
+			/*15.*/		"BankCredit.admin.inactive"
 					};
 			
 			public String[] userPerms = {
@@ -144,6 +162,7 @@ public class system extends JavaPlugin {
 			user = sqlCfg.get("Username") != null && !sqlCfg.get("Username").equals("YourUsername");
 			
 			getCommand(this.getDescription().getName()).setExecutor(new blockstone.B1GSt4R.BankCredit.Commands.bankCreditCMD(this));
+			//getCommand("userStats").setExecutor(new blockstone.B1GSt4R.BankCredit.Commands.userListStatsCMD(this));
 			
 			if(checkLicense(license)) {
 				if(host && port && dbname && user) {
@@ -161,6 +180,8 @@ public class system extends JavaPlugin {
 				new creditConfigSystem(this);
 				
 				getCommand("Bank").setExecutor(new blockstone.B1GSt4R.BankCredit.Commands.bankCmd(this));
+				getCommand("inactive").setExecutor(new blockstone.B1GSt4R.BankCredit.Commands.inactiveGuiCMD(this));
+				getCommand("tc").setExecutor(new blockstone.B1GSt4R.BankCredit.Commands.creditTransferCMD(this));
 				
 				
 				if(!fileCfg.exists() && !filePlayerCreditCfg.exists()) {
@@ -398,6 +419,7 @@ public class system extends JavaPlugin {
 		try {
 			URL url = new URL(URL);
 			Reader is = new InputStreamReader(url.openStream());
+			@SuppressWarnings("resource")
 			BufferedReader in = new BufferedReader(is);
 			for(String s; (s = in.readLine()) != null;)
 				ver += s;
@@ -478,7 +500,35 @@ public class system extends JavaPlugin {
 			p = Bukkit.getPlayer(player.getUniqueId());
 		}
 		
-		if(remainingValue != 0) {
+		if(self) {
+			EconomyResponse r3 = system.eco.withdrawPlayer(player, remainingValue+remainingPunishPay);
+			if(r3.transactionSuccess()) {
+					if(p != null) {
+						p.sendMessage(prefix+"Du hast die restlichen §e"+remainingValue+ " Münzen §7zurück gezahlt.");
+					}
+					api.removePlayerCredit(p, CreditID);
+			}else {
+				//p.sendMessage(plugin.failed+r.errorMessage);
+				if(p != null) {
+					p.sendMessage(strich);
+					p.sendMessage(prefix+"§cDu hast nicht genug Geld auf deinem Konto!");
+					p.sendMessage("§7 ");
+					if(self) {
+						p.sendMessage(prefix+"Betrag: §e"+(remainingValue+remainingPunishPay)+" Münzen");
+						p.sendMessage(prefix+"Fehlender Betrag: §e"+((remainingValue+remainingPunishPay)-eco.getBalance(player))+" Münzen");
+					}
+					p.sendMessage(strich);
+				}
+				if(!self) {
+					api.addNextPayDate(PlayerUUID_CreditID, 0, 0, 1);
+					api.addNotPayedDays(PlayerUUID_CreditID, 1);
+					double punishPay = api.generatePunishPay(player, CreditID);
+					api.addPunishPay(PlayerUUID_CreditID, punishPay);
+				}
+			}
+		}
+		
+		if(remainingValue != 0 && !self) {
 			if(r1.transactionSuccess()) {
 				if(api.getRemainingCreditValue(PlayerUUID_CreditID) == remainingValue) {
 					if(p != null) {
@@ -521,7 +571,7 @@ public class system extends JavaPlugin {
 		}
 		
 		
-		if(remainingPunishPay != 0) {
+		if(remainingPunishPay != 0 && !self) {
 			if(r2.transactionSuccess()) {
 				if(api.getPunishPays(PlayerUUID_CreditID) == remainingPunishPay) {
 					if(p != null) {

@@ -765,4 +765,15 @@ public class API {
 		}
 		return null;
 	}
+	
+	public static boolean lastSeenOverTime(OfflinePlayer p, int days) {
+		long lastSeen = plugin.timeRankAPI.sql.getPlayerLastSeen(p);
+		long lDays = days * 24 * 60 * 60 * 1000;
+		long current = System.currentTimeMillis();
+		return current >= lastSeen+lDays;
+	}
+	
+	public static double getTotalCreditValue(OfflinePlayer p, String CreditID) {
+		return getRemainingCreditValue(builderPlayerUUID_CreditID(p, CreditID))+getPunishPays(builderPlayerUUID_CreditID(p, CreditID));
+	}
 }

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="C:/Users/Admin/Desktop/mysql-connector-java-8.0.14.jar"/>
-	<classpathentry kind="lib" path="D:/Server/Minecraft/Spigot Versionen/spigot-1.12.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Admin/OneDrive/Privat/OneDrive/API/mysql-connector-java-8.0.14.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Admin/OneDrive/Privat/OneDrive/API/Spigot Versionen/spigot-1.12.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="D:/Server/Minecraft/Single Server/Minecraft Test Server/plugins/TimeRank.jar"/>
-	<classpathentry kind="lib" path="D:/Server/Minecraft/Single Server/Minecraft Test Server/plugins/Vault.jar"/>
+	<classpathentry kind="lib" path="D:/Server/Minecraft/Minecraft Test Server/plugins/Vault.jar"/>
+	<classpathentry kind="lib" path="D:/Server/Minecraft/Minecraft Test Server/plugins/TimeRank.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

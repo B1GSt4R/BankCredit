@@ -1,5 +1,5 @@
 name: BankCredit
-version: 0.8.2
+version: 0.8.4
 authors: [B1GSt4R]
 website: https://blockstone.de
 main: blockstone.B1GSt4R.BankCredit.Main.system
@@ -12,3 +12,6 @@ commands:
   BankCredit:
     usage: </command>
     description: check for Update
+  inactive:
+    usage: </command>
+    description: coming soon

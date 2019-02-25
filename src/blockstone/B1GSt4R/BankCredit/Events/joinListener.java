@@ -1,5 +1,7 @@
 package blockstone.B1GSt4R.BankCredit.Events;
 
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -32,6 +34,21 @@ public class joinListener implements Listener {
 			p.sendMessage(" ");
 			p.sendMessage(plugin.prefix+"Download Link below:");
 			p.sendMessage(plugin.prefix+"https://www.B1GSt4R.de/my-account/downloads/");
+			p.sendMessage(plugin.strichWarning);
+		}else if(perm) {
+			int counter = 0;
+			int counterCredit = 0;
+			for(OfflinePlayer op : Bukkit.getOfflinePlayers()) {
+				if(plugin.api.lastSeenOverTime(op, 4)) {
+					counter++;
+					if(plugin.api.getPlayerUUID_CreditID_List(op).size() != 0) {
+						counterCredit++;
+					}
+				}
+			}
+			p.sendMessage(plugin.strichWarning);
+			p.sendMessage(plugin.prefix+"There are §6"+counter+" §7inactive users!");
+			p.sendMessage(plugin.prefix+"§6"+counterCredit+" §7of them have a credit!");
 			p.sendMessage(plugin.strichWarning);
 		}
 		plugin.credit.addPlayer(p);

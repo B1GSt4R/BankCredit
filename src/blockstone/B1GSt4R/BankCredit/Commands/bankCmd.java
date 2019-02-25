@@ -15,29 +15,24 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import blockstone.B1GSt4R.BankCredit.Main.system;
-import blockstone.B1GSt4R.BankCredit.Utils.API;
 
 @SuppressWarnings("static-access")
 public class bankCmd implements CommandExecutor {
-	
-	private blockstone.B1GSt4R.timeRank.Main.system TimeRank;
 	
 	private blockstone.B1GSt4R.BankCredit.Main.system plugin;
 	public bankCmd(system system) {
 		this.plugin = system;
 	}
 	
-	ArrayList<String> credits = new ArrayList<>();
-	
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if(args.length == 0) {
 			if (sender instanceof Player) {
-				Player p = (Player)sender;
+				Player p = (Player) sender;
 				//if(p.isOp())
 				//bankMenu(p);
-				credits = plugin.api.getAllCreditIds();
-				creditMenu(p, true);
+				Inventory inv = creditMenu(p, true);
+				p.openInventory(inv);
 				return true;
 			}else {
 				sender.sendMessage("§cYou are not a Player!");
@@ -68,9 +63,8 @@ public class bankCmd implements CommandExecutor {
 		p.openInventory(inv);
 	}
 	
-	@SuppressWarnings({ "deprecation" })
-	public void creditMenu(Player p, boolean exitMenu) {
-		
+	public Inventory creditMenu(Player p, boolean exitMenu) {
+		ArrayList<String> credits = plugin.api.getAllCreditIds();
 		ItemStack exit = new ItemStack(Material.BARRIER);
 		ItemMeta exitMeta = exit.getItemMeta();
 		exitMeta.setDisplayName("§cExit");
@@ -132,7 +126,7 @@ public class bankCmd implements CommandExecutor {
 			boolean PlayerHasCredit = plugin.api.getPlayerUUID_CreditID_List(p).contains(plugin.api.builderPlayerUUID_CreditID(p, credits.get(i)));
 			boolean PlayerHasRank = true;
 			if(plugin.TimeRank) {
-				PlayerHasRank = TimeRank.api.getPlayerLevel(p) >= plugin.api.getCreditNeededRank(credits.get(i));
+				PlayerHasRank = plugin.timeRankAPI.api.getPlayerLevel(p) >= plugin.api.getCreditNeededRank(credits.get(i));
 			}
 			
 			if(PlayerHasCredit) {	
@@ -211,9 +205,6 @@ public class bankCmd implements CommandExecutor {
 			
 			inv.setItem(i, credit);
 		}
-		
-		p.openInventory(inv);
-		
+		return inv;	
 	}
-
 }
