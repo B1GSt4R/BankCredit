@@ -1,5 +1,5 @@
 name: BankCredit
-version: 0.8.5
+version: 0.8.5.1
 authors: [B1GSt4R]
 website: https://blockstone.de
 main: blockstone.B1GSt4R.BankCredit.Main.system
@@ -15,7 +15,7 @@ commands:
   inactive:
     usage: </command>
     description: coming soon
-  tc:
+  transfer:
     usage: </command>
     description: Transfer Player Credit to anthoer player
-    aliases: [transfer,credittransfer,transfercredit,ct]
+    aliases: [tc,ct,credittransfer,transfercredit]
