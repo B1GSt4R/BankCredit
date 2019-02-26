@@ -35,7 +35,8 @@ public class joinListener implements Listener {
 			p.sendMessage(plugin.prefix+"Download Link below:");
 			p.sendMessage(plugin.prefix+"https://www.B1GSt4R.de/my-account/downloads/");
 			p.sendMessage(plugin.strichWarning);
-		}else if(perm) {
+		}
+		if(perm) {
 			int counter = 0;
 			int counterCredit = 0;
 			for(OfflinePlayer op : Bukkit.getOfflinePlayers()) {
@@ -46,10 +47,8 @@ public class joinListener implements Listener {
 					}
 				}
 			}
-			p.sendMessage(plugin.strichWarning);
 			p.sendMessage(plugin.prefix+"There are §6"+counter+" §7inactive users!");
 			p.sendMessage(plugin.prefix+"§6"+counterCredit+" §7of them have a credit!");
-			p.sendMessage(plugin.strichWarning);
 		}
 		plugin.credit.addPlayer(p);
 	}
